@@ -7,6 +7,8 @@ from RadarSubSys.SignalProcessor import SignalProcessor
 from RadarSubSys.Tracker import Tracker
 
 class Radar:
+    ## Main Class of the Radar
+    
     def __init__(self, radarDataFile, radarSettingFile, simulationSettingFile):
         
         self.getRadarDataFromJSON(radarDataFile)
