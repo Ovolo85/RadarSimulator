@@ -7,7 +7,7 @@ from RadarSubSys.SignalProcessor import SignalProcessor
 from RadarSubSys.Tracker import Tracker
 
 class Radar:
-    ## Main Class of the Radar
+    ## Main Class of the Radar Simulator
     
     def __init__(self, radarDataFile, radarSettingFile, simulationSettingFile):
         
