@@ -1,5 +1,5 @@
-from pyparsing import col
 from RadarVisualizer import RadarVisualizer
+from RfEnvironment import RfEnvironment
 from ScenarioProcessor import ScenarioProcessor
 from Radar import Radar
 import tkinter as tk
@@ -9,7 +9,7 @@ class RadarSimulator:
     def __init__(self) -> None:
         self.scenarioProcessor = ScenarioProcessor()
         self.visualizer = RadarVisualizer()
-        self.radar = Radar("radar.json", "radar_setting.json", "sim.json")
+        
 
         self.startGUI()
 
@@ -44,9 +44,9 @@ class RadarSimulator:
 
         frmStartSimulationButtons = tk.Frame(borderwidth=20)
 
-        btnLoadScenario = tk.Button(master=frmStartSimulationButtons, text = "Load Scenario", width=30)
-        btnLoadScenario.grid(row=1, column = 1)
-        btnLoadScenario.bind("<Button-1>", self.loadScenario)
+        self.btnLoadScenario = tk.Button(master=frmStartSimulationButtons, text = "Load Scenario", width=30)
+        self.btnLoadScenario.grid(row=1, column = 1)
+        self.btnLoadScenario.bind("<Button-1>", self.loadScenario)
 
         self.btnStartRadarSimulation = tk.Button(master=frmStartSimulationButtons, text = "Start Simulation", width = 30, state="disabled")
         self.btnStartRadarSimulation.grid(row=2, column=1)
@@ -74,9 +74,15 @@ class RadarSimulator:
         
         self.scenario = self.scenarioProcessor.processScenario(scenarioFile, radarFile)
 
+        self.rfEnvironment = RfEnvironment(self.scenario)
+        # TODO: Replace the hard coded jsons with the enties
+        self.radar = Radar("radar.json", "radar_setting.json", "sim.json", self.rfEnvironment)
+
         self.btnDrawScenario["state"] = "normal"
         self.btnDrawTgtScenario["state"] = "normal"
         self.btnStartRadarSimulation["state"] = "normal"
+
+        self.btnLoadScenario["state"] = "disabled"
         
 
     def startRadarSimulation(self, event):
