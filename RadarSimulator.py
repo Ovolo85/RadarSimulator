@@ -5,6 +5,7 @@ from Radar import Radar
 import tkinter as tk
 
 class RadarSimulator:
+    # Git Test Comment
     def __init__(self) -> None:
         self.scenarioProcessor = ScenarioProcessor()
         self.visualizer = RadarVisualizer()
