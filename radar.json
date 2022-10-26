@@ -1,0 +1,9 @@
+{
+    "BurstLength": 0.005,
+    "MeasurementSigma": 20,
+    "M": 4,
+    "N": 10,
+    "BeamWidth": 3,
+    "ScanSpeed":50, 
+    "TurnAroundTime":0.100
+}
