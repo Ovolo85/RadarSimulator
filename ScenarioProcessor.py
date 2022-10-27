@@ -19,7 +19,7 @@ class ScenarioProcessor:
         self.getRadarDataFromJSON(radarFile)
         
         # Set Start Condition for Ownship
-        self.ownshipPositions.append([self.scenario.ownShipStartData["north"], 
+        self.ownshipPositions.append([0.0, self.scenario.ownShipStartData["north"], 
         self.scenario.ownShipStartData["east"], 
         self.scenario.ownShipStartData["down"], 
         self.scenario.ownShipStartData["heading"], 
@@ -34,7 +34,7 @@ class ScenarioProcessor:
         for tgtNumber in range(len(self.scenario.targetStartData)):
             
             # Set Start Condition for current Target
-            self.targetPositions[tgtNumber].append([self.scenario.targetStartData[tgtNumber]["north"], 
+            self.targetPositions[tgtNumber].append([0.0, self.scenario.targetStartData[tgtNumber]["north"], 
                 self.scenario.targetStartData[tgtNumber]["east"], 
                 self.scenario.targetStartData[tgtNumber]["down"], 
                 self.scenario.targetStartData[tgtNumber]["heading"], 
@@ -54,20 +54,7 @@ class ScenarioProcessor:
                     self.targetPositions[tgtNumber].append(manPositions[pos])
 
                         
-            
-
-        # Init Position Data for Ownship
-        self.ownshipPositions = []
-
         # Process Ownship
-        self.ownshipPositions.append([self.scenario.ownShipStartData["north"], 
-                self.scenario.ownShipStartData["east"], 
-                self.scenario.ownShipStartData["down"], 
-                self.scenario.ownShipStartData["heading"], 
-                self.scenario.ownShipStartData["velocity"], 
-                self.scenario.ownShipStartData["pitch"]
-                ])
-        
         for man in self.scenario.ownShipManList:
             if man["type"] == "static":
                 manPositions = self.processStatic(self.ownshipPositions[-1], man)
@@ -103,24 +90,26 @@ class ScenarioProcessor:
 
     def processGCurve (self, startCondition, manoeuvre):
         
+        startTime = startCondition[0]
+
         # Get Radius
         bank = arccos(1/manoeuvre["gload"])
-        r = (startCondition[4] ** 2) / (9.81 * tan(bank))
+        r = (startCondition[5] ** 2) / (9.81 * tan(bank))
 
         # Get Center Point
         if manoeuvre["degree"] < 0:
-            centerDir = startCondition[3] - 90 
+            centerDir = startCondition[4] - 90 
         else:
-            centerDir = startCondition[3] + 90
+            centerDir = startCondition[4] + 90
         centerDir = mod (centerDir, 360)
-        northOffset = r * cos (deg2rad (centerDir)) + startCondition[0]
-        eastOffset = r * sin (deg2rad (centerDir)) + startCondition[1]
+        northOffset = r * cos (deg2rad (centerDir)) + startCondition[1]
+        eastOffset = r * sin (deg2rad (centerDir)) + startCondition[2]
         centerToStartingPointDir = mod ((centerDir + 180), 360)
 
         # get Manoeuvre Time
         cf = 2*r*pi
         cfPart = abs((manoeuvre["degree"]/360)) * cf
-        t = cfPart / startCondition[4]
+        t = cfPart / startCondition[5]
         cycles = int(t / self.burstLength)
 
         anglePerCycle = abs(manoeuvre["degree"]) / cycles
@@ -134,38 +123,43 @@ class ScenarioProcessor:
             
             if manoeuvre["degree"] < 0:
                 currentAngleTotal = centerToStartingPointDir - currentAngle
-                newHeading = positions[-1][3] - anglePerCycle 
+                newHeading = positions[-1][4] - anglePerCycle 
             else:
                 currentAngleTotal = centerToStartingPointDir + currentAngle
-                newHeading = positions[-1][3] + anglePerCycle 
+                newHeading = positions[-1][4] + anglePerCycle 
 
             newNorth = cos(deg2rad(currentAngleTotal)) * r + northOffset
             newEast = sin(deg2rad(currentAngleTotal)) * r + eastOffset
-            newDown = positions[-1][2]
+            newDown = positions[-1][3]
 
-            newVel = positions[-1][4]
-            newPitch = positions[-1][5]
+            newVel = positions[-1][5]
+            newPitch = positions[-1][6]
 
-            positions.append([newNorth, newEast, newDown, newHeading, newVel, newPitch])
+            positions.append([startTime + self.burstLength*cycle, newNorth, newEast, newDown, newHeading, newVel, newPitch])
 
+        positions.pop(0)
         return positions
 
     def processStatic (self, startCondition, manoeuvre):
+        
+        startTime = startCondition[0]
+
         positions = []
         positions.append(startCondition)
-        distance = startCondition[4] * self.burstLength
+        distance = startCondition[5] * self.burstLength
         cycles = int(manoeuvre["time"] / self.burstLength)
         
-        for _ in range(cycles):
-            newNorth = positions[-1][0] + (cos(deg2rad(positions[-1][3])) * distance) 
-            newEast = positions[-1][1] + (sin(deg2rad(positions[-1][3])) * distance)
-            newDown = positions[-1][2]
-            newHeading = positions[-1][3]
-            newVel = positions[-1][4]
-            newPitch = positions[-1][5]
+        for cycle in range(cycles):
+            newNorth = positions[-1][1] + (cos(deg2rad(positions[-1][4])) * distance) 
+            newEast = positions[-1][2] + (sin(deg2rad(positions[-1][4])) * distance)
+            newDown = positions[-1][3]
+            newHeading = positions[-1][4]
+            newVel = positions[-1][5]
+            newPitch = positions[-1][6]
 
-            positions.append([newNorth, newEast, newDown, newHeading, newVel, newPitch])
+            positions.append([startTime + self.burstLength*cycle, newNorth, newEast, newDown, newHeading, newVel, newPitch])
 
+        positions.pop(0)
         return positions
 
     

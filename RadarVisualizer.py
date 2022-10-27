@@ -11,11 +11,11 @@ class RadarVisualizer:
         arrayToPlot = array(scenario[0])
         
         plt.figure()
-        plt.plot(arrayToPlot[:,1], arrayToPlot[:,0])
+        plt.plot(arrayToPlot[:,2], arrayToPlot[:,1])
 
         for i in range(len(scenario) -1):
             arrayToPlot = array(scenario[i + 1])
-            plt.plot(arrayToPlot[:,1], arrayToPlot[:,0])
+            plt.plot(arrayToPlot[:,2], arrayToPlot[:,1])
         
         ax = plt.gca() #you first need to get the axis handle
         ax.set_aspect(1) #sets the height to width ratio to 1
@@ -35,7 +35,7 @@ class RadarVisualizer:
         # first entry is Ownship data, all others are the targets
         for i in range(len(scenario) -1):
             arrayToPlot = array(scenario[i + 1])
-            plt.plot(arrayToPlot[:,1], arrayToPlot[:,0])
+            plt.plot(arrayToPlot[:,2], arrayToPlot[:,1])
         
         ax = plt.gca() #you first need to get the axis handle
         ax.set_aspect(1) #sets the height to width ratio to 1
@@ -46,6 +46,13 @@ class RadarVisualizer:
 
         plt.grid(True)
 
+        plt.show()
+
+    def plotTargetTimeStamps(self, scenario, tgtNo):
+        plt.figure()
+        arrayToPlot = array(scenario[tgtNo])
+
+        plt.plot(arrayToPlot[:,0])
         plt.show()
 
     def plotAntennaMovement(self, antennaAngles):

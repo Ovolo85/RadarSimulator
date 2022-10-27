@@ -10,11 +10,11 @@ from RadarSubSys.Tracker import Tracker
 class Radar:
     ## Main Class of the Radar Simulator
     
-    def __init__(self, radarDataFile, radarSettingFile, simulationSettingFile, rfEnvironment):
+    def __init__(self, radarDataFile, radarSettingFile, rfEnvironment):
         
         self.getRadarDataFromJSON(radarDataFile)
         self.getRadarSettingFromJSON(radarSettingFile)
-        self.getSimulationSettingFromJSON(simulationSettingFile)
+        
         
         self.scanner = Scanner(self.beamwidth, self.scanCenter, self.scanHalfWidth, self.scanBars, self.scanSpeed)
         self.sip = SignalProcessor()
@@ -45,20 +45,19 @@ class Radar:
         self.scanHalfWidth = data["ScanHalfWidth"]
         self.scanBars = data["ScanBars"]
 
-    def getSimulationSettingFromJSON(self, simulationSettingFile):
-        with open(simulationSettingFile) as json_file:
-            data = json.load(json_file)
-        self.measuremenNoise = data["MeasurementNoise"]
+    
 
     def operate(self, runtime):
         time = 0.0
         nextTurnAround = False
         turnAroundStartTime = 0.0
 
+        self.antennaAngles.append([time, self.scanner.getAzimuth(), self.scanner.getElevation(), self.scanner.getBar()])
+
         while time < runtime:
             if not nextTurnAround:
                 az, el, bar = self.scanner.moveScanner(self.burstLength)
-                self.receiver.measureBurst(az, el)
+                self.receiver.measureBurst(az, el, time)
                 if az == self.scanHalfWidth:
                     nextTurnAround = True
                     turnAroundStartTime = time

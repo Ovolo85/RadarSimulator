@@ -12,8 +12,8 @@ class Receiver:
         self.currentPrf = 0
         self.numberOfPrfs = len(self.prfs)
 
-    def measureBurst(self, az, el):
-        self.rfEnvironment.measure(self.prfs[self.currentPrf], self.pulseWidth, az, el)
+    def measureBurst(self, az, el, time):
+        self.rfEnvironment.measure(self.prfs[self.currentPrf], self.pulseWidth, az, el, time)
         self.currentPrf += 1
         self.currentPrf = mod(self.currentPrf, self.numberOfPrfs)
         pass

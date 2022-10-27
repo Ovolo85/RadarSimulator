@@ -74,16 +74,15 @@ class RadarSimulator:
         
         self.scenario = self.scenarioProcessor.processScenario(scenarioFile, radarFile)
 
-        self.rfEnvironment = RfEnvironment(self.scenario)
-        # TODO: Replace the hard coded jsons with the enties
-        self.radar = Radar("radar.json", "radar_setting.json", "sim.json", self.rfEnvironment)
+        self.rfEnvironment = RfEnvironment(self.scenario, "sim.json", self.entRadarFile.get())
+        
+        self.radar = Radar(self.entRadarFile.get(), self.entRadarSettingsFile.get(), self.rfEnvironment)
 
         self.btnDrawScenario["state"] = "normal"
         self.btnDrawTgtScenario["state"] = "normal"
         self.btnStartRadarSimulation["state"] = "normal"
 
         self.btnLoadScenario["state"] = "disabled"
-        
 
     def startRadarSimulation(self, event):
         self.simResult = self.radar.operate(120)
@@ -105,7 +104,5 @@ class RadarSimulator:
 
 if __name__ == "__main__":
     rs = RadarSimulator()
-    
-
-    #rs.radar.operate(120)
+   
     

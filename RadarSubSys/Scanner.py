@@ -43,3 +43,12 @@ class Scanner:
     def setScanCenter(self, center):
         self.scanCenter = center
 
+    def getAzimuth(self):
+        return self.azimuth
+
+    def getElevation(self):
+        return self.elevation
+
+    def getBar(self):
+        return self.currentBar
+
