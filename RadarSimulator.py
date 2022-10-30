@@ -66,6 +66,10 @@ class RadarSimulator:
         self.btnDrawAntennaMovement.grid(row = 3, column = 2)
         self.btnDrawAntennaMovement.bind("<Button-1>", self.drawAntennaMovement)
 
+        self.btnDrawEchoRanges = tk.Button(text="Draw Echo Ranges", width=30, state="disabled")
+        self.btnDrawEchoRanges.grid(row = 4, column = 2)
+        self.btnDrawEchoRanges.bind("<Button-1>", self.drawEchoRanges)
+
         window.mainloop()
 
     def loadScenario(self, event):
@@ -85,8 +89,14 @@ class RadarSimulator:
         self.btnLoadScenario["state"] = "disabled"
 
     def startRadarSimulation(self, event):
-        self.simResult = self.radar.operate(120)
+        maxOwnshipTime = self.scenario[0][-1][0]
+        print("Simulating " + str(maxOwnshipTime) + "s...")
+        self.simResult = self.radar.operate(maxOwnshipTime)
+
         self.btnDrawAntennaMovement["state"] = "normal"
+        self.btnDrawEchoRanges["state"] = "normal"
+
+        
 
     def drawScenario(self, event):
         if self.btnDrawScenario["state"] != "disabled":
@@ -100,7 +110,9 @@ class RadarSimulator:
         if self.btnDrawAntennaMovement["state"] != "disabled":
             self.visualizer.plotAntennaMovement(self.simResult["AntennaAngles"])
 
-
+    def drawEchoRanges(self, event):
+        if self.btnDrawEchoRanges["state"] != "disabled":
+            self.visualizer.plotEchoRanges(self.simResult["Echoes"])
 
 if __name__ == "__main__":
     rs = RadarSimulator()

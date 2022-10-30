@@ -32,7 +32,8 @@ class Scanner:
         self.azimuth = -self.halfWidth
 
     def getStartOfFrameElevation(self):
-        return - (self.bars - 1) * (self.beamWidth / 2)
+        # TODO: Add Scan Center Control
+        return - (self.bars - 1) * (self.beamWidth / 2) + self.scanCenter[1]
 
     def setBars(self, number):
         self.bars = number

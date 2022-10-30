@@ -60,7 +60,7 @@ class RadarVisualizer:
         arrayToPlot = array(antennaAngles)
 
         plt.figure()
-        
+
 
         plt.subplot(211)
         plt.plot(arrayToPlot[:,0], arrayToPlot[:,2])
@@ -73,5 +73,19 @@ class RadarVisualizer:
         plt.grid(True)
         
         plt.show()
+
+    def plotEchoRanges (self, echoes):
+        arrayToPlot = array(echoes)
+        
+        plt.figure()
+        plt.plot(arrayToPlot[:,0], arrayToPlot[:,1], 'ro')
+        plt.title("RF Echoes - Range over Time")
+        plt.grid(True)
+        plt.show()
+
+
+        
+
+
 
     

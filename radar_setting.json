@@ -1,5 +1,5 @@
 {
-    "ScanCenter": [0,0],
+    "ScanCenter": [0,1],
     "ScanHalfWidth": 60,
-    "ScanBars": 4
+    "ScanBars": 2
 }

@@ -21,7 +21,9 @@ class Radar:
         self.tracker = Tracker()
         self.receiver = Receiver(self.prfs, self.pulseWidth, rfEnvironment)
 
+        # Lists for Simulation Results
         self.antennaAngles = []
+        self.echoes = []
 
         pass
 
@@ -57,7 +59,10 @@ class Radar:
         while time < runtime:
             if not nextTurnAround:
                 az, el, bar = self.scanner.moveScanner(self.burstLength)
-                self.receiver.measureBurst(az, el, time)
+                echoesFromBurst = self.receiver.measureBurst(az, el, time)
+                for echo in echoesFromBurst: 
+                    self.echoes.append([time, echo[0], echo[1], echo[2], echo[3]])
+
                 if az == self.scanHalfWidth:
                     nextTurnAround = True
                     turnAroundStartTime = time
@@ -71,7 +76,7 @@ class Radar:
 
         
         
-        return {"AntennaAngles" : self.antennaAngles}
+        return {"AntennaAngles" : self.antennaAngles, "Echoes":self.echoes}
 
         
         

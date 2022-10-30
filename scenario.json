@@ -4,7 +4,7 @@
             "north": 0,
             "east": 0,
             "down": 0,
-            "heading": 0,
+            "heading": 340,
             "velocity": 200,
             "pitch":0
         }

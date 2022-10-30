@@ -7,5 +7,6 @@
     "ScanSpeed":50, 
     "TurnAroundTime":0.100,
     "PulseWidth":0.000003,
-    "PRFs":[9000, 12000, 15000, 18000, 21000, 24000]
+    "PRFs":[9000, 12000, 15000, 18000, 21000, 24000],
+    "RangeStandardDeviation": 20.0
 }
