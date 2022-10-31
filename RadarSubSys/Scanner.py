@@ -7,7 +7,7 @@ class Scanner:
         self.bars = bars
         self.speed = speed
 
-        self.azimuth = -self.halfWidth
+        self.azimuth = self.getStartOfBarAzimuth()
         self.elevation = self.getStartOfFrameElevation()
 
         self.currentBar = 1
@@ -16,8 +16,8 @@ class Scanner:
 
     def moveScanner(self, deltaTime):
         self.azimuth += deltaTime * self.speed
-        if self.azimuth > self.halfWidth:
-            self.azimuth = self.halfWidth
+        if self.azimuth > self.halfWidth + self.scanCenter[0]:
+            self.azimuth = self.halfWidth + self.scanCenter[0]
         
         return [self.azimuth, self.elevation, self.currentBar]
         
@@ -29,11 +29,13 @@ class Scanner:
         else:
             self.currentBar = 1
             self.elevation = self.getStartOfFrameElevation()
-        self.azimuth = -self.halfWidth
+        self.azimuth = self.getStartOfBarAzimuth()
 
     def getStartOfFrameElevation(self):
-        # TODO: Add Scan Center Control
         return - (self.bars - 1) * (self.beamWidth / 2) + self.scanCenter[1]
+
+    def getStartOfBarAzimuth(self):
+        return -self.halfWidth + self.scanCenter[0]
 
     def setBars(self, number):
         self.bars = number

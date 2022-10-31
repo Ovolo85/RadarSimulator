@@ -39,6 +39,8 @@ class Radar:
         self.turnAroundTime = data["TurnAroundTime"]
         self.pulseWidth = data["PulseWidth"]
         self.prfs = data["PRFs"]
+        self.rangeGateSize = data["RangeGateSize"]
+        self.dopplerBinSize = data["DopplerBinSize"]
 
     def getRadarSettingFromJSON(self,radarSettingFile):
         with open(radarSettingFile) as json_file:
@@ -63,7 +65,7 @@ class Radar:
                 for echo in echoesFromBurst: 
                     self.echoes.append([time, echo[0], echo[1], echo[2], echo[3]])
 
-                if az == self.scanHalfWidth:
+                if az == self.scanHalfWidth + self.scanCenter[0]:
                     nextTurnAround = True
                     turnAroundStartTime = time
             else:

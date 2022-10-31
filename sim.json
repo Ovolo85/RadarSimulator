@@ -1,4 +1,5 @@
 {
     "MeasurementNoise":true,
-    "RangeEclipsing":true
+    "RangeEclipsing":true,
+    "MaxRange":200000
 }

@@ -33,14 +33,22 @@ class RfEnvironment:
             
             offBoresightAngle = angleBetweenVectors(toTargetVector, antennaPointingVector)
             if offBoresightAngle < (self.beamWidth+0.2) / 2:
-                #print("Detection at time " + str(time) + " against Target " + str(target) +  " with OffBoresight of " + str (offBoresightAngle))
+                
                 # TODO: calculate RR; Monopuls
+               
+
                 # Range, RangeRate, DiffAz, DiffEl
                 measuredRange = vectorToRange(toTargetVector)
-                if self.measurementNoise:
-                    measuredRange = measuredRange + np.random.normal(0.0, self.rangeStandardDeviation)
-                burstEchoes.append([measuredRange, 0.0, 0.0, 0.0])
-
+                if measuredRange < self.maxRange:
+                    if self.measurementNoise:
+                        measuredRange = measuredRange + np.random.normal(0.0, self.rangeStandardDeviation)
+                    measuredRange = mod(measuredRange, calculateMUR(prf))
+                    
+                    if self.eclipsingEnabled:
+                        if measuredRange > calculateEclipsingZoneSize(pw):
+                            burstEchoes.append([measuredRange, 0.0, 0.0, 0.0]) 
+                    else:
+                        burstEchoes.append([measuredRange, 0.0, 0.0, 0.0])
         return burstEchoes
         
 
@@ -49,6 +57,7 @@ class RfEnvironment:
             data = json.load(json_file)
         self.measurementNoise = data["MeasurementNoise"]
         self.eclipsingEnabled = data["RangeEclipsing"]
+        self.maxRange = data["MaxRange"]
 
     def getRadarDataFromJSON(self, radarFile):
         with open(radarFile) as json_file:

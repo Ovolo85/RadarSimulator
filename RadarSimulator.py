@@ -10,7 +10,6 @@ class RadarSimulator:
         self.scenarioProcessor = ScenarioProcessor()
         self.visualizer = RadarVisualizer()
         
-
         self.startGUI()
 
     def startGUI(self):
@@ -95,8 +94,6 @@ class RadarSimulator:
 
         self.btnDrawAntennaMovement["state"] = "normal"
         self.btnDrawEchoRanges["state"] = "normal"
-
-        
 
     def drawScenario(self, event):
         if self.btnDrawScenario["state"] != "disabled":

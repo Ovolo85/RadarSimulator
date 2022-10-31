@@ -79,7 +79,7 @@ class RadarVisualizer:
         
         plt.figure()
         plt.plot(arrayToPlot[:,0], arrayToPlot[:,1], 'ro')
-        plt.title("RF Echoes - Range over Time")
+        plt.title("RF Echoes - Ambiguous Range over Time")
         plt.grid(True)
         plt.show()
 
