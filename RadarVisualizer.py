@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from mpldatacursor import datacursor
 from numpy import array
 
 class RadarVisualizer:
@@ -72,6 +73,7 @@ class RadarVisualizer:
         plt.title("Antenna Azimuth")
         plt.grid(True)
         
+
         plt.show()
 
     def plotEchoRanges (self, echoes):

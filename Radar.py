@@ -17,15 +17,14 @@ class Radar:
         
         
         self.scanner = Scanner(self.beamwidth, self.scanCenter, self.scanHalfWidth, self.scanBars, self.scanSpeed)
-        self.sip = SignalProcessor()
+        self.sip = SignalProcessor(self.m, self.n, self.rangeGateSize, self.dopplerBinSize, self.maxRangeGate)
         self.tracker = Tracker()
         self.receiver = Receiver(self.prfs, self.pulseWidth, rfEnvironment)
 
         # Lists for Simulation Results
         self.antennaAngles = []
         self.echoes = []
-
-        pass
+        self.barTimes = []
 
     def getRadarDataFromJSON(self, radarDataFile):
         with open(radarDataFile) as json_file:
@@ -41,6 +40,7 @@ class Radar:
         self.prfs = data["PRFs"]
         self.rangeGateSize = data["RangeGateSize"]
         self.dopplerBinSize = data["DopplerBinSize"]
+        self.maxRangeGate = data["MaxRangeGate"]
 
     def getRadarSettingFromJSON(self,radarSettingFile):
         with open(radarSettingFile) as json_file:
@@ -55,6 +55,8 @@ class Radar:
         time = 0.0
         nextTurnAround = False
         turnAroundStartTime = 0.0
+        barStartTime = 0.0
+        currentBar = 1
 
         self.antennaAngles.append([time, self.scanner.getAzimuth(), self.scanner.getElevation(), self.scanner.getBar()])
 
@@ -68,17 +70,20 @@ class Radar:
                 if az == self.scanHalfWidth + self.scanCenter[0]:
                     nextTurnAround = True
                     turnAroundStartTime = time
+                    self.barTimes.append([currentBar, barStartTime, time])
             else:
                 if time - turnAroundStartTime >= self.turnAroundTime:
                     self.scanner.turnAround()
                     nextTurnAround = False
+                    currentBar += 1
+                    barStartTime = time
 
             time += self.burstLength
             self.antennaAngles.append([time, az, el, bar])
 
         
         
-        return {"AntennaAngles" : self.antennaAngles, "Echoes":self.echoes}
+        return {"AntennaAngles" : self.antennaAngles, "Echoes":self.echoes, "BarTimes":self.barTimes}
 
         
         

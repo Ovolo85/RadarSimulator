@@ -10,5 +10,6 @@
     "PRFs":[9000, 12000, 15000, 18000, 21000, 24000],
     "RangeStandardDeviation": 20.0,
     "RangeGateSize": 128, 
-    "DopplerBinSize":10
+    "DopplerBinSize":10, 
+    "MaxRangeGate":1560
 }

@@ -39,7 +39,7 @@ class RadarSimulator:
         self.entScenarioFile.insert(0, "scenario.json")
         self.entScenarioFile.grid(row=3, column = 2)
 
-        frmInputFiles.grid(row=1, column=1)
+        frmInputFiles.grid(row=1, column=1, rowspan=5)
 
         frmStartSimulationButtons = tk.Frame(borderwidth=20)
 
@@ -51,22 +51,22 @@ class RadarSimulator:
         self.btnStartRadarSimulation.grid(row=2, column=1)
         self.btnStartRadarSimulation.bind("<Button-1>", self.startRadarSimulation)
 
-        frmStartSimulationButtons.grid(row=2, column=1)
+        frmStartSimulationButtons.grid(row=6, column=1)
 
         self.btnDrawScenario = tk.Button(text="Draw Scenario", width=30, state="disabled")
-        self.btnDrawScenario.grid(row = 1, column = 2)
+        self.btnDrawScenario.grid(row = 1, column = 2, pady=5)
         self.btnDrawScenario.bind("<Button-1>", self.drawScenario)
 
         self.btnDrawTgtScenario = tk.Button(text="Draw Target Scenario", width=30, state="disabled")
-        self.btnDrawTgtScenario.grid(row = 2, column = 2)
+        self.btnDrawTgtScenario.grid(row = 2, column = 2, pady=5)
         self.btnDrawTgtScenario.bind("<Button-1>", self.drawTgtScenario)
 
         self.btnDrawAntennaMovement = tk.Button(text="Draw Antenna Movement", width=30, state="disabled")
-        self.btnDrawAntennaMovement.grid(row = 3, column = 2)
+        self.btnDrawAntennaMovement.grid(row = 3, column = 2, pady=5)
         self.btnDrawAntennaMovement.bind("<Button-1>", self.drawAntennaMovement)
 
-        self.btnDrawEchoRanges = tk.Button(text="Draw Echo Ranges", width=30, state="disabled")
-        self.btnDrawEchoRanges.grid(row = 4, column = 2)
+        self.btnDrawEchoRanges = tk.Button(text="Draw Amb. Echo Ranges", width=30, state="disabled")
+        self.btnDrawEchoRanges.grid(row = 4, column = 2, pady=5)
         self.btnDrawEchoRanges.bind("<Button-1>", self.drawEchoRanges)
 
         window.mainloop()
