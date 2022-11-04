@@ -28,17 +28,27 @@ class RfEnvironment:
         antennaHeading = mod(az + ownshipPositionAtTime[4], 360)
         antennaPointingVector = azElRange2NorthEastDown(antennaHeading, el, 1000)
 
+        ownshipHeading = ownshipPositionAtTime[4]
+        ownshipVelocity = ownshipPositionAtTime[5]
+        ownshipPitch = ownshipPositionAtTime[6]
+
         for target in range(len(targetPositionsAtTime)):
             toTargetVector = vectorOwnshipToTarget(ownshipPositionAtTime, targetPositionsAtTime[target])
+            
+            targetHeading = targetPositionsAtTime[target][4]
+            targetVelocity = targetPositionsAtTime[target][5]
+            targetPitch = targetPositionsAtTime[target][6]
             
             offBoresightAngle = angleBetweenVectors(toTargetVector, antennaPointingVector)
             if offBoresightAngle < (self.beamWidth+0.2) / 2:
                 
                 # TODO: calculate RR; Monopuls
+                # TODO: Decide when something is IN Beam (0,2?)
                
 
                 # Range, RangeRate, DiffAz, DiffEl
                 measuredRange = vectorToRange(toTargetVector)
+                measuredRangeRate = calculateRangeRate(antennaHeading, el, ownshipHeading, ownshipPitch, ownshipVelocity, targetHeading, targetPitch, targetVelocity)
                 if measuredRange < self.maxRange:
                     if self.measurementNoise:
                         measuredRange = measuredRange + np.random.normal(0.0, self.rangeStandardDeviation)
@@ -46,9 +56,9 @@ class RfEnvironment:
                     
                     if self.eclipsingEnabled:
                         if measuredRange > calculateEclipsingZoneSize(pw):
-                            burstEchoes.append([measuredRange, 0.0, 0.0, 0.0]) 
+                            burstEchoes.append([measuredRange, measuredRangeRate, 0.0, 0.0]) 
                     else:
-                        burstEchoes.append([measuredRange, 0.0, 0.0, 0.0])
+                        burstEchoes.append([measuredRange, measuredRangeRate, 0.0, 0.0])
         return burstEchoes
         
 
