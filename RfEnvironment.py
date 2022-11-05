@@ -11,7 +11,7 @@ class RfEnvironment:
         self.getSimulationSettingFromJSON(simulationSettingFile)
         self.getRadarDataFromJSON(radarFile)
 
-    def measure(self, prf, pw, az, el, time):
+    def measure(self, frq, prf, pw, az, el, time):
         
         burstEchoes = []
 
@@ -40,11 +40,9 @@ class RfEnvironment:
             targetPitch = targetPositionsAtTime[target][6]
             
             offBoresightAngle = angleBetweenVectors(toTargetVector, antennaPointingVector)
-            if offBoresightAngle < (self.beamWidth+0.2) / 2:
+            if offBoresightAngle < (self.beamWidth+self.beamOverlap) / 2:
                 
-                # TODO: calculate RR; Monopuls
-                # TODO: Decide when something is IN Beam (0,2?)
-               
+                # TODO: calculate Monopuls               
 
                 # Range, RangeRate, DiffAz, DiffEl
                 measuredRange = vectorToRange(toTargetVector)
@@ -52,7 +50,11 @@ class RfEnvironment:
                 if measuredRange < self.maxRange:
                     if self.measurementNoise:
                         measuredRange = measuredRange + np.random.normal(0.0, self.rangeStandardDeviation)
+                        measuredRangeRate = measuredRangeRate + np.random.normal(0.0, self.velocityStandardDeviation)
+                    
+                    # Get Ambiguous Values by MUR and MUV
                     measuredRange = mod(measuredRange, calculateMUR(prf))
+                    measuredRangeRate = mod(measuredRangeRate, calculateMUV(prf, frq))
                     
                     if self.eclipsingEnabled:
                         if measuredRange > calculateEclipsingZoneSize(pw):
@@ -68,6 +70,7 @@ class RfEnvironment:
         self.measurementNoise = data["MeasurementNoise"]
         self.eclipsingEnabled = data["RangeEclipsing"]
         self.maxRange = data["MaxRange"]
+        self.beamOverlap = data["BeamOverlap"]
 
     def getRadarDataFromJSON(self, radarFile):
         with open(radarFile) as json_file:
@@ -75,3 +78,4 @@ class RfEnvironment:
         self.burstLength = data["BurstLength"]
         self.beamWidth = data["BeamWidth"]
         self.rangeStandardDeviation = data["RangeStandardDeviation"]
+        self.velocityStandardDeviation = data["VelocityStandardDeviation"]

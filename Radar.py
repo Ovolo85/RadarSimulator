@@ -17,9 +17,9 @@ class Radar:
         
         
         self.scanner = Scanner(self.beamwidth, self.scanCenter, self.scanHalfWidth, self.scanBars, self.scanSpeed)
-        self.sip = SignalProcessor(self.m, self.n, self.rangeGateSize, self.dopplerBinSize, self.maxRangeGate)
+        self.sip = SignalProcessor(self.m, self.n, self.rangeGateSize, self.dopplerBinSize, self.maxRangeGate, self.prfs, self.numberOfDopplerBins, self.highestClosingVelocity)
         self.tracker = Tracker()
-        self.receiver = Receiver(self.prfs, self.pulseWidth, rfEnvironment)
+        self.receiver = Receiver(self.carrierFrequency, self.frequencyAgility, self.prfs, self.pulseWidth, rfEnvironment)
 
         # Lists for Simulation Results
         self.antennaAngles = []
@@ -36,11 +36,14 @@ class Radar:
         self.beamwidth = data["BeamWidth"]
         self.scanSpeed = data["ScanSpeed"]
         self.turnAroundTime = data["TurnAroundTime"]
+        self.carrierFrequency = data["CarrierFrequency"]
         self.pulseWidth = data["PulseWidth"]
         self.prfs = data["PRFs"]
         self.rangeGateSize = data["RangeGateSize"]
         self.dopplerBinSize = data["DopplerBinSize"]
         self.maxRangeGate = data["MaxRangeGate"]
+        self.numberOfDopplerBins = data["NumberOfDopplerBins"]
+        self.highestClosingVelocity = data["HighestClosingVelocity"]
 
     def getRadarSettingFromJSON(self,radarSettingFile):
         with open(radarSettingFile) as json_file:
@@ -48,8 +51,12 @@ class Radar:
         self.scanCenter = data["ScanCenter"]
         self.scanHalfWidth = data["ScanHalfWidth"]
         self.scanBars = data["ScanBars"]
+        self.frequencyAgility = data["FrequencyAgility"]
 
-    
+    def appendToEchoList(self, time, echolistFromMeasurement):
+        for echo in echolistFromMeasurement:
+            self.echoes.append([time, echo[0], echo[1], echo[2], echo[3]])
+        
 
     def operate(self, runtime):
         time = 0.0
@@ -63,9 +70,9 @@ class Radar:
         while time < runtime:
             if not nextTurnAround:
                 az, el, bar = self.scanner.moveScanner(self.burstLength)
-                echoesFromBurst = self.receiver.measureBurst(az, el, time)
-                for echo in echoesFromBurst: 
-                    self.echoes.append([time, echo[0], echo[1], echo[2], echo[3]])
+                usedCarrierFrequency, usedPRF, echoesFromBurst = self.receiver.measureBurst(az, el, time)
+                self.appendToEchoList(time, echoesFromBurst)
+                self.sip.processBurst(echoesFromBurst, usedPRF, usedCarrierFrequency)
 
                 if az == self.scanHalfWidth + self.scanCenter[0]:
                     nextTurnAround = True

@@ -1,5 +1,6 @@
 {
     "MeasurementNoise":true,
     "RangeEclipsing":true,
-    "MaxRange":200000
+    "MaxRange":200000, 
+    "BeamOverlap":0.2
 }
