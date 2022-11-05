@@ -14,6 +14,6 @@
     "RangeGateSize": 128, 
     "DopplerBinSize":10, 
     "MaxRangeGate":1560,
-    "NumberOfDopplerBins": 1200,
+    "NumberOfDopplerBins": 120,
     "HighestClosingVelocity": 800
 }

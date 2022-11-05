@@ -88,4 +88,4 @@ if __name__ == "__main__":
     #print(calculateEclipsingZoneSize(0.000003))
     #print(headingPitchVelocity2Vector(45, 10, 200))
     #print(calculateRangeRate(antAz=45, antEl=0, ownshipHeading=45, ownshipPitch=0, ownshipVel=200, tgtHeading=135, tgtPitch=0, tgtVel=200))
-    print(calculateMUV(12000, 10000000000))
+    print(calculateMUV(24000, 10000000000))

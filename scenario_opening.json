@@ -1,0 +1,38 @@
+{
+    "ownship": 
+        {
+            "north": 0,
+            "east": 0,
+            "down": 0,
+            "heading": 0,
+            "velocity": 200,
+            "pitch":0
+        }
+    ,
+    "targets": [
+        {
+            "north": 60000,
+            "east": 0,
+            "down": 0,
+            "heading": 0,
+            "velocity": 250,
+            "pitch":0
+        }
+        
+    ], 
+    "ownshipMans": [
+        {
+            "type":"static", "time":120
+            
+        }        
+    ], 
+    "targetMans": [
+        [
+            {
+                "type":"static", "time":120
+            }
+        ]
+    ]
+
+}
+
