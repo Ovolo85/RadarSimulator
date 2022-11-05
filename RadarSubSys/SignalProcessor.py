@@ -30,8 +30,8 @@ class SignalProcessor:
         self.simStep += 1
         
         # Initialize a new R/D Matrix
-        rd = [[False]*self.maxRangeGate for _ in range(self.noOfDopplerBins)]
-        print("RD Mat done " + str(self.simStep))
+        #rd = [[False]*self.maxRangeGate for _ in range(self.noOfDopplerBins)]
+        #print("RD Mat done " + str(self.simStep))
 
         # Get Muv and Mur
         muv = calculateMUV(self.prfs[prf], frequency)
@@ -39,11 +39,12 @@ class SignalProcessor:
         
         # Process Echoes to resolve ambiguities 
         if len(echoes) > 0:
+            
             for echo in echoes:
                 pass
         
         # Construct RESI
-        self.resolutionIntervalRDMatrices.append(rd)
+        #self.resolutionIntervalRDMatrices.append(rd)
         if len(self.resolutionIntervalRDMatrices) > self.n:
             self.resolutionIntervalRDMatrices.pop(0)
 
