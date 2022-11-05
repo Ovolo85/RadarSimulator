@@ -95,7 +95,7 @@ class RadarSimulator:
         self.simResult = self.radar.operate(maxOwnshipTime)
         endTime = time.time()
 
-        print("Simulation duration: " + str(endTime - startTime))
+        print("Simulation duration: " + str(endTime - startTime) + " s")
 
         self.btnDrawAntennaMovement["state"] = "normal"
         self.btnDrawEchoRanges["state"] = "normal"
