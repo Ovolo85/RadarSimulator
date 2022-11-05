@@ -3,6 +3,7 @@ from RfEnvironment import RfEnvironment
 from ScenarioProcessor import ScenarioProcessor
 from Radar import Radar
 import tkinter as tk
+import time
 
 class RadarSimulator:
     # Git Test Comment
@@ -90,7 +91,11 @@ class RadarSimulator:
     def startRadarSimulation(self, event):
         maxOwnshipTime = self.scenario[0][-1][0]
         print("Simulating " + str(maxOwnshipTime) + "s...")
+        startTime = time.time()
         self.simResult = self.radar.operate(maxOwnshipTime)
+        endTime = time.time()
+
+        print("Simulation duration: " + str(endTime - startTime))
 
         self.btnDrawAntennaMovement["state"] = "normal"
         self.btnDrawEchoRanges["state"] = "normal"
