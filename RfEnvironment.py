@@ -13,6 +13,8 @@ class RfEnvironment:
 
     def measure(self, frq, prf, pw, az, el, time):
         
+        # TODO: Implement Resolution criteria
+
         burstEchoes = []
 
         targetPositionsAtTime = []
@@ -58,7 +60,9 @@ class RfEnvironment:
                     
                     if self.eclipsingEnabled:
                         if measuredRange > calculateEclipsingZoneSize(pw):
-                            burstEchoes.append([measuredRange, measuredRangeRate, 0.0, 0.0]) 
+                            burstEchoes.append([measuredRange, measuredRangeRate, 0.0, 0.0])
+                        else:
+                            print("Range Eclipsing at Time " + str(time))
                     else:
                         burstEchoes.append([measuredRange, measuredRangeRate, 0.0, 0.0])
         return burstEchoes

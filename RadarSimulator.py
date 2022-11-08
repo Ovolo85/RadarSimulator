@@ -9,7 +9,7 @@ class RadarSimulator:
     # Git Test Comment
     def __init__(self) -> None:
         self.scenarioProcessor = ScenarioProcessor()
-        self.visualizer = RadarVisualizer()
+        
         
         self.startGUI()
 
@@ -78,9 +78,12 @@ class RadarSimulator:
         
         self.scenario = self.scenarioProcessor.processScenario(scenarioFile, radarFile)
 
+        # TODO: sim.json is still hardcoded. UI Entry?
         self.rfEnvironment = RfEnvironment(self.scenario, "sim.json", self.entRadarFile.get())
         
         self.radar = Radar(self.entRadarFile.get(), self.entRadarSettingsFile.get(), self.rfEnvironment)
+
+        self.visualizer = RadarVisualizer(self.entRadarFile.get())
 
         self.btnDrawScenario["state"] = "normal"
         self.btnDrawTgtScenario["state"] = "normal"

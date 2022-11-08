@@ -19,9 +19,8 @@ class SignalProcessor:
 
         self.initPrfMurTable()
         self.resolutionIntervalAlarmLists = []
-
-        self.simStep = 0
-
+        self.lastBurstDetectionList = []
+        
     def initPrfMurTable(self):
         self.prfMurTable = []
         for prf in self.prfs:
@@ -31,18 +30,12 @@ class SignalProcessor:
         
         burstAlarmList = []
 
-        self.simStep += 1
-        
-        # Initialize a new R/D Matrix
-        #rd = [[False]*self.maxRangeGate for _ in range(self.noOfDopplerBins)]
-        #print("RD Mat done " + str(self.simStep))
-
         # Get Muv and Mur
         # TODO: implement Channels to get a fixed library of MUVs
         muv = calculateMUV(self.prfs[prf], frequency)
         mur = self.prfMurTable[prf]["mur"]
         
-        # Process Echoes to resolve ambiguities 
+        # Range and Doppler Unfold
         if len(echoes) > 0:
             
             for echo in echoes:
@@ -76,17 +69,64 @@ class SignalProcessor:
                     velCandidates.append(velCandidate)
                     velBinCandidates.append(int(velCandidate/self.dopplerBinSize) + self.lowestPositiveDopplerBin)
                     velCandidate += muv
-               
-                burstAlarmList.append(rangeGateCandidates)
-                burstAlarmList.append(velBinCandidates)                
-                print("Echo processed")
+                
+                burstAlarmList.append([])
+                burstAlarmList[-1].append(rangeGateCandidates)
+                burstAlarmList[-1].append(velBinCandidates)                
+                #print("Echo processed")
 
 
         
-        # Construct RESI
+        # Construct RESI Alarm List
         self.resolutionIntervalAlarmLists.append(burstAlarmList)
         if len(self.resolutionIntervalAlarmLists) > self.n:
             self.resolutionIntervalAlarmLists.pop(0)
+
+        # M/N Processing
+        rangeGateAlarmCounter = []
+        burstDetectionList = []
+        potentialBurstDetectionList = []
+        
+
+        if len(self.resolutionIntervalAlarmLists) == self.n:
+            for alarm in self.resolutionIntervalAlarmLists[-1]:
+                for rangeGate in alarm[0]:
+                    rangeGateAlarmCounter.append(1)
+                    for previousBurst in range(self.n - 1):
+                        for previousAlarm in self.resolutionIntervalAlarmLists[previousBurst]:
+                            for previousRangeGate in previousAlarm[0]:
+                                if previousRangeGate == rangeGate:
+                                    rangeGateAlarmCounter[-1] += 1
+                                    
+                
+                for i in range(len(rangeGateAlarmCounter)):
+                    if rangeGateAlarmCounter[i] >= self.m:
+                        potentialBurstDetectionList.append(alarm[0][i])
+            
+            burstDetectionList = []
+            burstDetectionListMask = []
+            for potDet in range(len(potentialBurstDetectionList)):
+                toBeReported = True
+                for lastDet in self.lastBurstDetectionList:
+                    if potentialBurstDetectionList[potDet] == lastDet:
+                        toBeReported = False
+                burstDetectionListMask.append(toBeReported)
+
+            for i in range(len(potentialBurstDetectionList)):
+                if burstDetectionListMask[i]:
+                    burstDetectionList.append(potentialBurstDetectionList[i])     
+            
+        self.lastBurstDetectionList = potentialBurstDetectionList
+            
+
+        return burstDetectionList
+
+
+                        
+
+                            
+                        
+
 
 
 
