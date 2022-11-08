@@ -53,9 +53,9 @@ class Radar:
         self.scanBars = data["ScanBars"]
         self.frequencyAgility = data["FrequencyAgility"]
 
-    def appendToEchoList(self, time, echolistFromMeasurement):
+    def appendToEchoList(self, time, prf, echolistFromMeasurement):
         for echo in echolistFromMeasurement:
-            self.echoes.append([time, echo[0], echo[1], echo[2], echo[3]])
+            self.echoes.append([time, prf, echo[0], echo[1], echo[2], echo[3]])
         
 
     def operate(self, runtime):
@@ -71,8 +71,10 @@ class Radar:
             if not nextTurnAround:
                 az, el, bar = self.scanner.moveScanner(self.burstLength)
                 usedCarrierFrequency, usedPRF, echoesFromBurst = self.receiver.measureBurst(az, el, time)
-                self.appendToEchoList(time, echoesFromBurst)
-                self.sip.processBurst(echoesFromBurst, usedPRF, usedCarrierFrequency)
+                self.appendToEchoList(time, usedPRF, echoesFromBurst)
+                detectionList = self.sip.processBurst(echoesFromBurst, usedPRF, usedCarrierFrequency)
+                if len(detectionList) > 0:
+                    print(str(time) + ": " + str(detectionList))
 
                 if az == self.scanHalfWidth + self.scanCenter[0]:
                     nextTurnAround = True

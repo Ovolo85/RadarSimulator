@@ -1,11 +1,19 @@
 import matplotlib.pyplot as plt
 from mpldatacursor import datacursor
 from numpy import array
+import json
 
 class RadarVisualizer:
 
-    def __init__(self):
-        pass
+    def __init__(self, radarDataFile):
+        self.getRadarDataFromJSON(radarDataFile)
+        self.symboltable = ["ro", "go", "bo", "co", "mo", "yo", "ko", "wo"]
+    
+    def getRadarDataFromJSON(self, radarDataFile):
+        with open(radarDataFile) as json_file:
+            data = json.load(json_file)
+        self.prfs = data["PRFs"]
+
 
     def plotCompleteScenarioTopDown(self, scenario):
         # first entry is Ownship data, all others are the targets
@@ -62,7 +70,6 @@ class RadarVisualizer:
 
         plt.figure()
 
-
         plt.subplot(211)
         plt.plot(arrayToPlot[:,0], arrayToPlot[:,2])
         plt.title("Antenna Elevation")
@@ -77,10 +84,21 @@ class RadarVisualizer:
         plt.show()
 
     def plotEchoRanges (self, echoes):
-        arrayToPlot = array(echoes)
+        arrayAllPRFs = array(echoes)
         
         plt.figure()
-        plt.plot(arrayToPlot[:,0], arrayToPlot[:,1], 'ro')
+
+        for prf in range(len(self.prfs)):
+            filter_array = []
+            for echo in arrayAllPRFs:
+                if echo[1] == prf:
+                    filter_array.append(True)
+                else:
+                    filter_array.append(False)
+            arrayToPlot = arrayAllPRFs[filter_array]
+            plt.plot(arrayToPlot[:,0], arrayToPlot[:,2], self.symboltable[prf], label=self.prfs[prf])
+
+        plt.legend(loc="upper right")
         plt.title("RF Echoes - Ambiguous Range over Time")
         plt.grid(True)
         plt.show()
