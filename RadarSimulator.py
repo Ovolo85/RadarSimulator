@@ -5,8 +5,9 @@ from Radar import Radar
 import tkinter as tk
 import time
 
+
 class RadarSimulator:
-    # Git Test Comment
+    
     def __init__(self) -> None:
         self.scenarioProcessor = ScenarioProcessor()
         
@@ -17,60 +18,98 @@ class RadarSimulator:
 
         window = tk.Tk()
 
-        frmInputFiles = tk.Frame(borderwidth=20)
+        frmCol1 = tk.Frame(pady=10, padx=10)
 
-        lblRadarFile = tk.Label(master=frmInputFiles, text="Radar File:")
+        lblRadarFile = tk.Label(master=frmCol1, text="Radar File:")
         lblRadarFile.grid(row = 1, column = 1)
 
-        lblRadarSettingsFile = tk.Label(master=frmInputFiles, text="Radar Settings File:")
+        lblRadarSettingsFile = tk.Label(master=frmCol1, text="Radar Settings File:")
         lblRadarSettingsFile.grid(row=2, column=1)
 
-        lblScenarioFile = tk.Label(master=frmInputFiles, text="Scenario File:")
+        lblScenarioFile = tk.Label(master=frmCol1, text="Scenario File:")
         lblScenarioFile.grid(row=3, column=1)
 
-        self.entRadarFile = tk.Entry(master=frmInputFiles, )
+        lblSimulationFile = tk.Label(master=frmCol1, text="Simulation File:")
+        lblSimulationFile.grid(row=4, column=1)
+
+        self.entRadarFile = tk.Entry(master=frmCol1, )
         self.entRadarFile.insert(0, "radar.json")
         self.entRadarFile.grid(row=1, column = 2)
 
-        self.entRadarSettingsFile = tk.Entry(master=frmInputFiles, )
+        self.entRadarSettingsFile = tk.Entry(master=frmCol1, )
         self.entRadarSettingsFile.insert(0, "radar_setting.json")
         self.entRadarSettingsFile.grid(row=2, column = 2)
 
-        self.entScenarioFile = tk.Entry(master=frmInputFiles, )
+        self.entScenarioFile = tk.Entry(master=frmCol1, )
         self.entScenarioFile.insert(0, "scenario.json")
         self.entScenarioFile.grid(row=3, column = 2)
 
-        frmInputFiles.grid(row=1, column=1, rowspan=5)
+        self.entSimulationFile = tk.Entry(master=frmCol1, )
+        self.entSimulationFile.insert(0, "sim.json")
+        self.entSimulationFile.grid(row=4, column = 2)
 
-        frmStartSimulationButtons = tk.Frame(borderwidth=20)
-
-        self.btnLoadScenario = tk.Button(master=frmStartSimulationButtons, text = "Load Scenario", width=30)
-        self.btnLoadScenario.grid(row=1, column = 1)
+        self.btnLoadScenario = tk.Button(master=frmCol1, text = "Load Scenario", width=30)
+        self.btnLoadScenario.grid(row=5, column = 1, columnspan=2)
         self.btnLoadScenario.bind("<Button-1>", self.loadScenario)
 
-        self.btnStartRadarSimulation = tk.Button(master=frmStartSimulationButtons, text = "Start Simulation", width = 30, state="disabled")
-        self.btnStartRadarSimulation.grid(row=2, column=1)
+        self.btnStartRadarSimulation = tk.Button(master=frmCol1, text = "Start Simulation", width = 30, state="disabled")
+        self.btnStartRadarSimulation.grid(row=6, column=1, columnspan=2)
         self.btnStartRadarSimulation.bind("<Button-1>", self.startRadarSimulation)
 
-        frmStartSimulationButtons.grid(row=6, column=1)
+        frmCol1.grid(row=1, column=1, sticky="N")
 
-        self.btnDrawScenario = tk.Button(text="Draw Scenario", width=30, state="disabled")
-        self.btnDrawScenario.grid(row = 1, column = 2, pady=5)
+        frmCol2 = tk.Frame(pady=10, padx=10)
+
+
+        self.btnDrawScenario = tk.Button(master = frmCol2, text="Draw Scenario", width=20, state="disabled")
+        self.btnDrawScenario.grid(row = 1, column = 1)
         self.btnDrawScenario.bind("<Button-1>", self.drawScenario)
 
-        self.btnDrawTgtScenario = tk.Button(text="Draw Target Scenario", width=30, state="disabled")
-        self.btnDrawTgtScenario.grid(row = 2, column = 2, pady=5)
+        self.btnDrawTgtScenario = tk.Button(master = frmCol2, text="Draw Target Scenario", width=20, state="disabled")
+        self.btnDrawTgtScenario.grid(row = 2, column = 1)
         self.btnDrawTgtScenario.bind("<Button-1>", self.drawTgtScenario)
 
-        self.btnDrawAntennaMovement = tk.Button(text="Draw Antenna Movement", width=30, state="disabled")
-        self.btnDrawAntennaMovement.grid(row = 3, column = 2, pady=5)
+        self.btnDrawTgtRanges = tk.Button(master = frmCol2, text="Draw Target Ranges", width=20, state="disabled")
+        self.btnDrawTgtRanges.grid(row = 3, column = 1)
+        self.btnDrawTgtRanges.bind("<Button-1>", self.drawTgtRanges)
+
+        self.btnDrawAntennaMovement = tk.Button(master = frmCol2, text="Draw Antenna Movement", width=20, state="disabled")
+        self.btnDrawAntennaMovement.grid(row = 4, column = 1)
         self.btnDrawAntennaMovement.bind("<Button-1>", self.drawAntennaMovement)
 
-        self.btnDrawEchoRanges = tk.Button(text="Draw Amb. Echo Ranges", width=30, state="disabled")
-        self.btnDrawEchoRanges.grid(row = 4, column = 2, pady=5)
+        self.btnDrawEchoRanges = tk.Button(master = frmCol2, text="Draw Amb. Echo Ranges", width=20, state="disabled")
+        self.btnDrawEchoRanges.grid(row = 5, column = 1)
         self.btnDrawEchoRanges.bind("<Button-1>", self.drawEchoRanges)
 
+        self.btnDrawEclipsingRanges = tk.Button(master = frmCol2, text="Draw Eclipsing Ranges", width=20, state="disabled")
+        self.btnDrawEclipsingRanges.grid(row = 6, column = 1)
+        self.btnDrawEclipsingRanges.bind("<Button-1>", self.drawRangeEclipsingZones)
+
+        frmCol2.grid(row=1, column=2, sticky="N")
+
+        frmCol3 = tk.Frame(pady = 10, padx = 10)
+
+        lblTargetSelect = tk.Label(master=frmCol3, text="Target select:")
+        lblTargetSelect.grid(row = 1, column = 1)
+
+        self.entTargetSelect = tk.Entry(master = frmCol3, width=5)
+        self.entTargetSelect.insert(0, "1")
+        self.entTargetSelect.grid(row = 1, column = 2)
+
+        self.btnDrawSingleTgtRange = tk.Button(master=frmCol3, text="Draw Single Target Range", width=20, state="disabled")
+        self.btnDrawSingleTgtRange.grid(row = 2, column = 1, columnspan = 2)
+        self.btnDrawSingleTgtRange.bind("<Button-1>", self.drawSingleTgtRange)
+
+        
+
+        frmCol3.grid(row = 1, column = 3, sticky = "N")
+
+        self.statusText = tk.Text(height=15)
+        self.statusText.grid(row=2, column=1, columnspan=2)
+        
         window.mainloop()
+
+    # Button Methods
 
     def loadScenario(self, event):
         scenarioFile = self.entScenarioFile.get()
@@ -78,30 +117,38 @@ class RadarSimulator:
         
         self.scenario = self.scenarioProcessor.processScenario(scenarioFile, radarFile)
 
-        # TODO: sim.json is still hardcoded. UI Entry?
-        self.rfEnvironment = RfEnvironment(self.scenario, "sim.json", self.entRadarFile.get())
+        self.rfEnvironment = RfEnvironment(self.scenario, self.entSimulationFile.get(), self.entRadarFile.get())
         
         self.radar = Radar(self.entRadarFile.get(), self.entRadarSettingsFile.get(), self.rfEnvironment)
 
-        self.visualizer = RadarVisualizer(self.entRadarFile.get())
+        self.visualizer = RadarVisualizer(self.entRadarFile.get(), self.entSimulationFile.get())
+
+        self.provideScenarioStatusText()
 
         self.btnDrawScenario["state"] = "normal"
         self.btnDrawTgtScenario["state"] = "normal"
         self.btnStartRadarSimulation["state"] = "normal"
+        self.btnDrawTgtRanges["state"] = "normal"
+        self.btnDrawSingleTgtRange["state"] = "normal"
+        self.btnDrawEclipsingRanges["state"] = "normal"
 
         self.btnLoadScenario["state"] = "disabled"
 
     def startRadarSimulation(self, event):
-        maxOwnshipTime = self.scenario[0][-1][0]
-        print("Simulating " + str(maxOwnshipTime) + "s...")
-        startTime = time.time()
-        self.simResult = self.radar.operate(maxOwnshipTime)
-        endTime = time.time()
+        if self.btnStartRadarSimulation["state"] == "normal":
+            maxOwnshipTime = self.scenario[0][-1][0]
+            print("Simulating " + str(maxOwnshipTime) + "s...")
+            startTime = time.time()
+            self.simResult = self.radar.operate(maxOwnshipTime)
+            endTime = time.time()
+            duration = endTime - startTime
 
-        print("Simulation duration: " + str(endTime - startTime) + " s")
+            self.provideSimulationStatusText(duration)        
 
-        self.btnDrawAntennaMovement["state"] = "normal"
-        self.btnDrawEchoRanges["state"] = "normal"
+            self.btnDrawAntennaMovement["state"] = "normal"
+            self.btnDrawEchoRanges["state"] = "normal"
+
+            self.btnStartRadarSimulation["state"] = "disabled"
 
     def drawScenario(self, event):
         if self.btnDrawScenario["state"] != "disabled":
@@ -118,6 +165,33 @@ class RadarSimulator:
     def drawEchoRanges(self, event):
         if self.btnDrawEchoRanges["state"] != "disabled":
             self.visualizer.plotEchoRanges(self.simResult["Echoes"])
+
+    def drawTgtRanges(self, event):
+        if self.btnDrawTgtRanges["state"] != "disabled":
+            self.visualizer.plotAllTargetRanges(self.scenario)
+
+    def drawSingleTgtRange(self, event):
+        if self.btnDrawSingleTgtRange["state"] != "disabled":
+            self.visualizer.plotSingleTargetRange(self.scenario, int(self.entTargetSelect.get()))
+
+    def drawRangeEclipsingZones(self, event):
+        if self.btnDrawEclipsingRanges["state"] != "disabled":
+            self.visualizer.plotEclipsingZones()
+
+    # Utility
+    def provideSimulationStatusText(self, simtime):
+        self.statusText.insert(tk.END, "Simulation duration: " + str(simtime) + " s\n")
+        self.statusText.insert(tk.END, "Scan Bars with Detections: " + str(self.simResult["BarsWithDetections"]))
+
+    def provideScenarioStatusText(self):
+        osStart = self.scenario[0][0][0]
+        osEnd = self.scenario[0][-1][0]
+        self.statusText.insert(tk.END, "Ownship data Times: " + str([osStart, osEnd]) + "\n")
+        
+        targetNo = 1
+        for target in range (1, len(self.scenario)):
+            self.statusText.insert(tk.END, "Target " + str(targetNo) + " Times: " + str([self.scenario[target][0][0], self.scenario[target][-1][0]]) + "\n")
+            targetNo += 1
 
 if __name__ == "__main__":
     rs = RadarSimulator()

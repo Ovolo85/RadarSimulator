@@ -1,29 +1,39 @@
 import matplotlib.pyplot as plt
-from mpldatacursor import datacursor
-from numpy import array
+#from mpldatacursor import datacursor
+import numpy as np
 import json
+from UtilityFunctions import *
 
 class RadarVisualizer:
 
-    def __init__(self, radarDataFile):
+    def __init__(self, radarDataFile, simDataFile):
         self.getRadarDataFromJSON(radarDataFile)
+        self.getSimDataFromJson(simDataFile)
         self.symboltable = ["ro", "go", "bo", "co", "mo", "yo", "ko", "wo"]
     
     def getRadarDataFromJSON(self, radarDataFile):
         with open(radarDataFile) as json_file:
             data = json.load(json_file)
         self.prfs = data["PRFs"]
+        self.burstLength = data["BurstLength"]
+        self.pw = data["PulseWidth"]
 
+    def getSimDataFromJson(self, simDataFile):
+        with open(simDataFile) as json_file:
+            data = json.load(json_file)
+        self.maxRange = data["MaxRange"]
+
+    # Scenario Plots (Truth Data)
 
     def plotCompleteScenarioTopDown(self, scenario):
         # first entry is Ownship data, all others are the targets
-        arrayToPlot = array(scenario[0])
+        arrayToPlot = np.array(scenario[0])
         
         plt.figure()
         plt.plot(arrayToPlot[:,2], arrayToPlot[:,1])
 
         for i in range(len(scenario) -1):
-            arrayToPlot = array(scenario[i + 1])
+            arrayToPlot = np.array(scenario[i + 1])
             plt.plot(arrayToPlot[:,2], arrayToPlot[:,1])
         
         ax = plt.gca() #you first need to get the axis handle
@@ -43,8 +53,9 @@ class RadarVisualizer:
 
         # first entry is Ownship data, all others are the targets
         for i in range(len(scenario) -1):
-            arrayToPlot = array(scenario[i + 1])
-            plt.plot(arrayToPlot[:,2], arrayToPlot[:,1])
+            arrayToPlot = np.array(scenario[i + 1])
+            plt.plot(arrayToPlot[:,2], arrayToPlot[:,1], label="Target " + str(i+1))
+            plt.legend(loc="upper right")
         
         ax = plt.gca() #you first need to get the axis handle
         ax.set_aspect(1) #sets the height to width ratio to 1
@@ -57,16 +68,75 @@ class RadarVisualizer:
 
         plt.show()
 
-    def plotTargetTimeStamps(self, scenario, tgtNo):
+    def plotAllTargetRanges(self, scenario):
         plt.figure()
-        arrayToPlot = array(scenario[tgtNo])
+        for target in range(1, len(scenario)):
+            ranges = []
+            
+            for position in scenario[target]:
+                ownshipPosition = []
+                for ownshipPositionCandidate in scenario[0]:
+                    if (ownshipPositionCandidate[0] - position[0]) < (self.burstLength / 100):
+                        ownshipPosition = ownshipPositionCandidate
+                        break
+                ranges.append([position[0], vectorToRange(vectorOwnshipToTarget(ownshipPosition, position))])
+            rangesToPlot = np.array(ranges)
+            plt.plot(rangesToPlot[:,0], rangesToPlot[:,1])
 
-        plt.plot(arrayToPlot[:,0])
+        plt.grid(True)
+
         plt.show()
+
+    def plotSingleTargetRange(self, scenario, tgtNo):
+        plt.figure()
+
+        targetData = scenario[tgtNo]
+        ranges = []
+
+        for position in targetData:
+            ownshipPosition = []
+            for ownshipPositionCandidate in scenario[0]:
+                if (ownshipPositionCandidate[0] - position[0]) < (self.burstLength / 100):
+                    ownshipPosition = ownshipPositionCandidate
+                    break
+            ranges.append([position[0], vectorToRange(vectorOwnshipToTarget(ownshipPosition, position))])
+        rangesToPlot = np.array(ranges)
+        plt.plot(rangesToPlot[:,0], rangesToPlot[:,1])
+
+        plt.title("Target " + str(tgtNo) + " Range")
+        plt.grid(True)
+
+        plt.show()
+
+    # Setting Plots
+
+    def plotEclipsingZones(self):
+        
+        plt.figure()
+        numberOfPRFs = len(self.prfs)
+        
+        currentRow = 1
+        for prf in self.prfs:
+            prfRange = []
+            mur = calculateMUR(prf)
+            pwInMeter = self.pw * c
+            for r in range(self.maxRange):
+                if np.mod(r, mur+pwInMeter) < pwInMeter:
+                    prfRange.append(1)
+                else:
+                    prfRange.append(0)
+            plt.subplot(numberOfPRFs, 1, currentRow)
+            plt.plot(prfRange)
+            currentRow += 1
+        plt.show()
+
+
+   
+    # Simulation Plots
 
     def plotAntennaMovement(self, antennaAngles):
         
-        arrayToPlot = array(antennaAngles)
+        arrayToPlot = np.array(antennaAngles)
 
         plt.figure()
 
@@ -84,7 +154,7 @@ class RadarVisualizer:
         plt.show()
 
     def plotEchoRanges (self, echoes):
-        arrayAllPRFs = array(echoes)
+        arrayAllPRFs = np.array(echoes)
         
         plt.figure()
 

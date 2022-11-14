@@ -25,6 +25,7 @@ class Radar:
         self.antennaAngles = []
         self.echoes = []
         self.barTimes = []
+        self.barsWithDetections = []
 
     def getRadarDataFromJSON(self, radarDataFile):
         with open(radarDataFile) as json_file:
@@ -75,6 +76,8 @@ class Radar:
                 detectionList = self.sip.processBurst(echoesFromBurst, usedPRF, usedCarrierFrequency)
                 if len(detectionList) > 0:
                     print(str(time) + ": " + str(detectionList))
+                    if not self.barsWithDetections.__contains__(currentBar):
+                        self.barsWithDetections.append(currentBar)
 
                 if az == self.scanHalfWidth + self.scanCenter[0]:
                     nextTurnAround = True
@@ -92,7 +95,7 @@ class Radar:
 
         
         
-        return {"AntennaAngles" : self.antennaAngles, "Echoes":self.echoes, "BarTimes":self.barTimes}
+        return {"AntennaAngles" : self.antennaAngles, "Echoes":self.echoes, "BarTimes":self.barTimes, "BarsWithDetections":self.barsWithDetections}
 
         
         
