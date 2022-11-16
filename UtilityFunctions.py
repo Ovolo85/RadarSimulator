@@ -54,6 +54,9 @@ def calculateEclipsingZoneSize(pw):
     size = (pw * c) / 2
     return size
 
+def calculateClutterVel(az, el, vel):
+    return vel * cos(deg2rad(az)) * cos(deg2rad(el))
+
 def calculateRangeRate(antAz, antEl, ownshipHeading, ownshipPitch, ownshipVel, tgtHeading, tgtPitch, tgtVel):
     
     ownshipVelVector = headingPitchVelocity2Vector(ownshipHeading, ownshipPitch, ownshipVel)

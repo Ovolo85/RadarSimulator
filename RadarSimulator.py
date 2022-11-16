@@ -81,9 +81,17 @@ class RadarSimulator:
         self.btnDrawEchoRanges.grid(row = 5, column = 1)
         self.btnDrawEchoRanges.bind("<Button-1>", self.drawEchoRanges)
 
+        self.btnDrawDetectionRanges = tk.Button(master = frmCol2, text="Draw Det. Report Ranges", width=20, state="disabled")
+        self.btnDrawDetectionRanges.grid(row = 6, column = 1)
+        self.btnDrawDetectionRanges.bind("<Button-1>", self.drawDetectionRanges)
+
         self.btnDrawEclipsingRanges = tk.Button(master = frmCol2, text="Draw Eclipsing Ranges", width=20, state="disabled")
-        self.btnDrawEclipsingRanges.grid(row = 6, column = 1)
+        self.btnDrawEclipsingRanges.grid(row = 7, column = 1)
         self.btnDrawEclipsingRanges.bind("<Button-1>", self.drawRangeEclipsingZones)
+
+        self.btnDrawClutterVelocities = tk.Button(master = frmCol2, text="Draw Clutter Velocities", width=20, state="disabled")
+        self.btnDrawClutterVelocities.grid(row = 8, column = 1)
+        self.btnDrawClutterVelocities.bind("<Button-1>", self.drawClutterVelocities)
 
         frmCol2.grid(row=1, column=2, sticky="N")
 
@@ -147,6 +155,8 @@ class RadarSimulator:
 
             self.btnDrawAntennaMovement["state"] = "normal"
             self.btnDrawEchoRanges["state"] = "normal"
+            self.btnDrawDetectionRanges["state"] = "normal"
+            self.btnDrawClutterVelocities["state"] = "normal"
 
             self.btnStartRadarSimulation["state"] = "disabled"
 
@@ -166,6 +176,10 @@ class RadarSimulator:
         if self.btnDrawEchoRanges["state"] != "disabled":
             self.visualizer.plotEchoRanges(self.simResult["Echoes"])
 
+    def drawDetectionRanges(self, event):
+        if self.btnDrawEchoRanges["state"] != "disabled":
+            self.visualizer.plotAllTargetRangesAndDetectionReports(self.scenario, self.simResult["DetectionReports"])
+
     def drawTgtRanges(self, event):
         if self.btnDrawTgtRanges["state"] != "disabled":
             self.visualizer.plotAllTargetRanges(self.scenario)
@@ -177,6 +191,10 @@ class RadarSimulator:
     def drawRangeEclipsingZones(self, event):
         if self.btnDrawEclipsingRanges["state"] != "disabled":
             self.visualizer.plotEclipsingZones()
+
+    def drawClutterVelocities(self, event):
+        if self.btnDrawClutterVelocities["state"] != "disabled":
+            self.visualizer.plotClutterVelocities(self.simResult["ClutterVelocities"])
 
     # Utility
     def provideSimulationStatusText(self, simtime):

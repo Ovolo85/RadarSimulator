@@ -68,6 +68,10 @@ class RfEnvironment:
         return burstEchoes
         
 
+    def getOwnshipSpeed(self, time):
+        timeStep = round(time / self.burstLength)
+        return self.scenario[0][timeStep][5]
+
     def getSimulationSettingFromJSON(self, simulationSettingFile):
         with open(simulationSettingFile) as json_file:
             data = json.load(json_file)

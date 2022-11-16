@@ -9,7 +9,7 @@ class RadarVisualizer:
     def __init__(self, radarDataFile, simDataFile):
         self.getRadarDataFromJSON(radarDataFile)
         self.getSimDataFromJson(simDataFile)
-        self.symboltable = ["ro", "go", "bo", "co", "mo", "yo", "ko", "wo"]
+        self.symboltable = ["ro", "go", "bo", "co", "mo", "yo", "ko", "rx"]
     
     def getRadarDataFromJSON(self, radarDataFile):
         with open(radarDataFile) as json_file:
@@ -76,12 +76,47 @@ class RadarVisualizer:
             for position in scenario[target]:
                 ownshipPosition = []
                 for ownshipPositionCandidate in scenario[0]:
-                    if (ownshipPositionCandidate[0] - position[0]) < (self.burstLength / 100):
+                    if (np.abs(ownshipPositionCandidate[0] - position[0])) < (self.burstLength / 100):
+                        
                         ownshipPosition = ownshipPositionCandidate
                         break
                 ranges.append([position[0], vectorToRange(vectorOwnshipToTarget(ownshipPosition, position))])
             rangesToPlot = np.array(ranges)
             plt.plot(rangesToPlot[:,0], rangesToPlot[:,1])
+
+        plt.grid(True)
+
+        plt.show()
+
+    def plotAllTargetRangesAndDetectionReports(self, scenario, detectionReports):
+        plt.figure()
+        
+        # Truth Data
+        for target in range(1, len(scenario)):
+            targetStartTime = scenario[target][0][0]
+            ownshipRowOffset = round(targetStartTime / self.burstLength)
+            
+            ranges = []
+            for idx, position in enumerate(scenario[target]):
+                ownshipPosition = scenario[0][idx + ownshipRowOffset]
+                ranges.append([position[0], vectorToRange(vectorOwnshipToTarget(ownshipPosition, position))])
+
+
+            
+            
+            # for position in scenario[target]:
+            #     ownshipPosition = []
+            #     for ownshipPositionCandidate in scenario[0]:
+            #         if (np.abs(ownshipPositionCandidate[0] - position[0])) < (self.burstLength / 100):
+            #             ownshipPosition = ownshipPositionCandidate
+            #             break
+            #     ranges.append([position[0], vectorToRange(vectorOwnshipToTarget(ownshipPosition, position))])
+            rangesToPlot = np.array(ranges)
+            plt.plot(rangesToPlot[:,0], rangesToPlot[:,1])
+
+        # Detection Reports
+        arrayDetectionReports = np.array(detectionReports)
+        plt.plot(arrayDetectionReports[:,0], arrayDetectionReports[:,1], "ro")
 
         plt.grid(True)
 
@@ -95,8 +130,9 @@ class RadarVisualizer:
 
         for position in targetData:
             ownshipPosition = []
+            # TODO: Range Calc is to slow. use indices instead of time search!
             for ownshipPositionCandidate in scenario[0]:
-                if (ownshipPositionCandidate[0] - position[0]) < (self.burstLength / 100):
+                if (np.abs(ownshipPositionCandidate[0] - position[0])) < (self.burstLength / 100):
                     ownshipPosition = ownshipPositionCandidate
                     break
             ranges.append([position[0], vectorToRange(vectorOwnshipToTarget(ownshipPosition, position))])
@@ -172,6 +208,17 @@ class RadarVisualizer:
         plt.title("RF Echoes - Ambiguous Range over Time")
         plt.grid(True)
         plt.show()
+
+    def plotClutterVelocities(self, clutterVelocities):
+        vcArray = np.array(clutterVelocities)
+        
+        plt.figure()
+
+        plt.plot(vcArray[:,0], vcArray[:,1])
+        plt.title("Clutter Velocities - V_C")
+        plt.grid()
+        plt.show()
+
 
 
         

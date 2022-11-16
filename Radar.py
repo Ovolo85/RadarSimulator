@@ -20,12 +20,16 @@ class Radar:
         self.sip = SignalProcessor(self.m, self.n, self.rangeGateSize, self.dopplerBinSize, self.maxRangeGate, self.prfs, self.numberOfDopplerBins, self.highestClosingVelocity)
         self.tracker = Tracker()
         self.receiver = Receiver(self.carrierFrequency, self.frequencyAgility, self.prfs, self.pulseWidth, rfEnvironment)
-
+        
+        self.rfEnvironment = rfEnvironment
+        
         # Lists for Simulation Results
         self.antennaAngles = []
         self.echoes = []
         self.barTimes = []
         self.barsWithDetections = []
+        self.detectionReports = []
+        self.clutterVelocities = []
 
     def getRadarDataFromJSON(self, radarDataFile):
         with open(radarDataFile) as json_file:
@@ -57,7 +61,11 @@ class Radar:
     def appendToEchoList(self, time, prf, echolistFromMeasurement):
         for echo in echolistFromMeasurement:
             self.echoes.append([time, prf, echo[0], echo[1], echo[2], echo[3]])
-        
+    
+    def appendToDetectionList(self, time, detectionsFromBurst):
+        for detectionRG in detectionsFromBurst:
+            detectionRange = detectionRG * self.rangeGateSize + self.rangeGateSize/2
+            self.detectionReports.append([time, detectionRange])
 
     def operate(self, runtime):
         time = 0.0
@@ -70,15 +78,25 @@ class Radar:
 
         while time < runtime:
             if not nextTurnAround:
+                
+                # Scanner Movement
                 az, el, bar = self.scanner.moveScanner(self.burstLength)
+                
+                # Receiver
                 usedCarrierFrequency, usedPRF, echoesFromBurst = self.receiver.measureBurst(az, el, time)
                 self.appendToEchoList(time, usedPRF, echoesFromBurst)
-                detectionList = self.sip.processBurst(echoesFromBurst, usedPRF, usedCarrierFrequency)
+                
+                # Signal Processor
+                ownshipSpeed = self.rfEnvironment.getOwnshipSpeed(time)
+                detectionList, clutterVelocity = self.sip.processBurst(echoesFromBurst, usedPRF, usedCarrierFrequency, ownshipSpeed, az, el)
                 if len(detectionList) > 0:
                     print(str(time) + ": " + str(detectionList))
                     if not self.barsWithDetections.__contains__(currentBar):
                         self.barsWithDetections.append(currentBar)
+                self.appendToDetectionList(time, detectionList)
+                self.clutterVelocities.append([time, clutterVelocity])
 
+                # Turn Around Management
                 if az == self.scanHalfWidth + self.scanCenter[0]:
                     nextTurnAround = True
                     turnAroundStartTime = time
@@ -95,7 +113,11 @@ class Radar:
 
         
         
-        return {"AntennaAngles" : self.antennaAngles, "Echoes":self.echoes, "BarTimes":self.barTimes, "BarsWithDetections":self.barsWithDetections}
+        return {"AntennaAngles" : self.antennaAngles, 
+        "Echoes":self.echoes, "BarTimes":self.barTimes, 
+        "BarsWithDetections":self.barsWithDetections, 
+        "DetectionReports": self.detectionReports,
+        "ClutterVelocities": self.clutterVelocities}
 
         
         

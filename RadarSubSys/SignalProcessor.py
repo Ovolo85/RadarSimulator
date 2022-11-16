@@ -1,8 +1,7 @@
-from UtilityFunctions import calculateMUR, calculateMUV
+from UtilityFunctions import calculateMUR, calculateMUV, calculateClutterVel
 
 
 class SignalProcessor:
-    
     
     
     def __init__(self, m, n, rangeGateSize, dopplerBinSize, maxRangeGate, prfs, noOfDopplerBins, highestClosingVel):
@@ -20,13 +19,15 @@ class SignalProcessor:
         self.initPrfMurTable()
         self.resolutionIntervalAlarmLists = []
         self.lastBurstDetectionList = []
+
+        self.resiDetectionReportList = []
         
     def initPrfMurTable(self):
         self.prfMurTable = []
         for prf in self.prfs:
             self.prfMurTable.append({"prf":prf, "mur":calculateMUR(prf)})
 
-    def processBurst(self, echoes, prf, frequency):
+    def processBurst(self, echoes, prf, frequency, velocity, azimuth, elevation):
         
         burstAlarmList = []
 
@@ -34,6 +35,10 @@ class SignalProcessor:
         # TODO: implement Channels to get a fixed library of MUVs
         muv = calculateMUV(self.prfs[prf], frequency)
         mur = self.prfMurTable[prf]["mur"]
+
+        # Get Clutter Velocity
+        # TODO: VC seems correct, now filter the Echoes with it
+        V_c = calculateClutterVel(azimuth, elevation, velocity)
         
         # Range and Doppler Unfold
         if len(echoes) > 0:
@@ -73,11 +78,9 @@ class SignalProcessor:
                 burstAlarmList.append([])
                 burstAlarmList[-1].append(rangeGateCandidates)
                 burstAlarmList[-1].append(velBinCandidates)                
-                #print("Echo processed")
-
-
+                
         
-        # Construct RESI Alarm List
+        # Construct RESI Alarm List, contains the last N Burst Alarm Lists
         self.resolutionIntervalAlarmLists.append(burstAlarmList)
         if len(self.resolutionIntervalAlarmLists) > self.n:
             self.resolutionIntervalAlarmLists.pop(0)
@@ -89,37 +92,31 @@ class SignalProcessor:
         
 
         if len(self.resolutionIntervalAlarmLists) == self.n:
-            for alarm in self.resolutionIntervalAlarmLists[-1]:
-                for rangeGate in alarm[0]:
+            for alarm in self.resolutionIntervalAlarmLists[-1]: # Alarms from last Burst
+                for rangeGate in alarm[0]:                      # alarm = [[Ranges][RRs]]
                     rangeGateAlarmCounter.append(1)
                     for previousBurst in range(self.n - 1):
                         for previousAlarm in self.resolutionIntervalAlarmLists[previousBurst]:
                             for previousRangeGate in previousAlarm[0]:
                                 if previousRangeGate == rangeGate:
                                     rangeGateAlarmCounter[-1] += 1
-                                    
-                
+                    
                 for i in range(len(rangeGateAlarmCounter)):
                     if rangeGateAlarmCounter[i] >= self.m:
                         potentialBurstDetectionList.append(alarm[0][i])
+                        # TODO: This might be the spot to figure out the RR
             
-            burstDetectionList = []
-            burstDetectionListMask = []
-            for potDet in range(len(potentialBurstDetectionList)):
-                toBeReported = True
-                for lastDet in self.lastBurstDetectionList:
-                    if potentialBurstDetectionList[potDet] == lastDet:
-                        toBeReported = False
-                burstDetectionListMask.append(toBeReported)
+            for idx, potDet in enumerate(potentialBurstDetectionList):
+                for prevDetList in self.resiDetectionReportList:
+                    for prevDet in prevDetList: 
+                        if prevDet == potDet:
+                            potentialBurstDetectionList.pop(idx)
 
-            for i in range(len(potentialBurstDetectionList)):
-                if burstDetectionListMask[i]:
-                    burstDetectionList.append(potentialBurstDetectionList[i])     
-            
-        self.lastBurstDetectionList = potentialBurstDetectionList
-            
+            self.resiDetectionReportList.append(potentialBurstDetectionList)
+            if len(self.resiDetectionReportList) > self.n:
+                self.resiDetectionReportList.pop(0)
 
-        return burstDetectionList
+        return potentialBurstDetectionList, V_c
 
 
                         
