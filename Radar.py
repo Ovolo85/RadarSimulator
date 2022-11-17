@@ -17,7 +17,7 @@ class Radar:
         
         
         self.scanner = Scanner(self.beamwidth, self.scanCenter, self.scanHalfWidth, self.scanBars, self.scanSpeed)
-        self.sip = SignalProcessor(self.m, self.n, self.rangeGateSize, self.dopplerBinSize, self.maxRangeGate, self.prfs, self.numberOfDopplerBins, self.highestClosingVelocity)
+        self.sip = SignalProcessor(radarDataFile)
         self.tracker = Tracker()
         self.receiver = Receiver(self.carrierFrequency, self.frequencyAgility, self.prfs, self.pulseWidth, rfEnvironment)
         
@@ -31,11 +31,11 @@ class Radar:
         self.detectionReports = []
         self.clutterVelocities = []
 
+    # TODO: Most of the data from the JSONs is no longer needed here because it is read in by the subsystems on their own
     def getRadarDataFromJSON(self, radarDataFile):
         with open(radarDataFile) as json_file:
             data = json.load(json_file)
         self.burstLength = data["BurstLength"]
-        self.measurementSigma = data["MeasurementSigma"]
         self.m = data["M"]
         self.n = data["N"]
         self.beamwidth = data["BeamWidth"]

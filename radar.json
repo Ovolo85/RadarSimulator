@@ -1,19 +1,27 @@
 {
     "BurstLength": 0.005,
-    "MeasurementSigma": 20,
+    
     "M": 4,
     "N": 8,
+    
     "BeamWidth": 2,
     "ScanSpeed":50, 
     "TurnAroundTime":0.100,
+    
     "CarrierFrequency":[10000000000],
     "PulseWidth":0.000003,
     "PRFs":[9500, 25300, 17500, 13100, 19500, 22700, 11500, 16000 ],
+    
     "RangeStandardDeviation": 20.0,
     "VelocityStandardDeviation": 5.0,
+    
     "RangeGateSize": 128, 
     "DopplerBinSize":10, 
     "MaxRangeGate":1560,
     "NumberOfDopplerBins": 120,
-    "HighestClosingVelocity": 800
+    "HighestClosingVelocity": 800, 
+    
+    "MBCNotchActive":true,
+    "MBCNotchType":"static",
+    "MBCHalfWidthInBins":2
 }

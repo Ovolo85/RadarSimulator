@@ -67,7 +67,7 @@ class RfEnvironment:
                         burstEchoes.append([measuredRange, measuredRangeRate, 0.0, 0.0])
         return burstEchoes
         
-
+    # TODO: Maybe this would better be located in a "Ownship" Simulation? Instead of RF Environment...
     def getOwnshipSpeed(self, time):
         timeStep = round(time / self.burstLength)
         return self.scenario[0][timeStep][5]

@@ -41,7 +41,7 @@ class RadarSimulator:
         self.entRadarSettingsFile.grid(row=2, column = 2)
 
         self.entScenarioFile = tk.Entry(master=frmCol1, )
-        self.entScenarioFile.insert(0, "scenario.json")
+        self.entScenarioFile.insert(0, "scenario_notching.json")
         self.entScenarioFile.grid(row=3, column = 2)
 
         self.entSimulationFile = tk.Entry(master=frmCol1, )
