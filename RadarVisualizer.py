@@ -88,6 +88,10 @@ class RadarVisualizer:
 
         plt.show()
 
+    def plotAllTargetRangeRates(self, scenario):
+        pass
+        # TODO: Implement!
+
     def plotAllTargetRangesAndDetectionReports(self, scenario, detectionReports):
         plt.figure()
         
@@ -102,15 +106,6 @@ class RadarVisualizer:
                 ranges.append([position[0], vectorToRange(vectorOwnshipToTarget(ownshipPosition, position))])
 
 
-            
-            
-            # for position in scenario[target]:
-            #     ownshipPosition = []
-            #     for ownshipPositionCandidate in scenario[0]:
-            #         if (np.abs(ownshipPositionCandidate[0] - position[0])) < (self.burstLength / 100):
-            #             ownshipPosition = ownshipPositionCandidate
-            #             break
-            #     ranges.append([position[0], vectorToRange(vectorOwnshipToTarget(ownshipPosition, position))])
             rangesToPlot = np.array(ranges)
             plt.plot(rangesToPlot[:,0], rangesToPlot[:,1])
 

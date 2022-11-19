@@ -2,7 +2,7 @@
     "BurstLength": 0.005,
     
     "M": 4,
-    "N": 8,
+    "N": 9,
     
     "BeamWidth": 2,
     "ScanSpeed":50, 
@@ -13,15 +13,18 @@
     "PRFs":[9500, 25300, 17500, 13100, 19500, 22700, 11500, 16000 ],
     
     "RangeStandardDeviation": 20.0,
-    "VelocityStandardDeviation": 5.0,
+    "VelocityStandardDeviation": 1.0,
     
     "RangeGateSize": 128, 
-    "DopplerBinSize":10, 
+    "DopplerBinSize":5, 
     "MaxRangeGate":1560,
-    "NumberOfDopplerBins": 120,
+    "NumberOfDopplerBins": 240,
     "HighestClosingVelocity": 800, 
+
+    "DopplerBinIntegrationTolerance":1,
+    "RangeGateIntegrationTolerance":0,
     
     "MBCNotchActive":true,
     "MBCNotchType":"static",
-    "MBCHalfWidthInBins":2
+    "MBCHalfWidthInBins":4
 }

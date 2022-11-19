@@ -1,11 +1,13 @@
 import json
 import matplotlib.pyplot as plt
 from numpy import array
-from RadarSubSys.Receiver import Receiver
 
+from RadarSubSys.Receiver import Receiver
 from RadarSubSys.Scanner import Scanner
 from RadarSubSys.SignalProcessor import SignalProcessor
 from RadarSubSys.Tracker import Tracker
+
+from UtilityFunctions import calculateLowestPositiveDopplerBin
 
 class Radar:
     ## Main Class of the Radar Simulator
@@ -30,6 +32,8 @@ class Radar:
         self.barsWithDetections = []
         self.detectionReports = []
         self.clutterVelocities = []
+        self.highestOpeningVelocity = self.highestClosingVelocity - (self.numberOfDopplerBins * self.dopplerBinSize)
+        self.lowestPositiveDopplerBin = calculateLowestPositiveDopplerBin(self.highestOpeningVelocity, self.dopplerBinSize)
 
     # TODO: Most of the data from the JSONs is no longer needed here because it is read in by the subsystems on their own
     def getRadarDataFromJSON(self, radarDataFile):
@@ -63,9 +67,13 @@ class Radar:
             self.echoes.append([time, prf, echo[0], echo[1], echo[2], echo[3]])
     
     def appendToDetectionList(self, time, detectionsFromBurst):
-        for detectionRG in detectionsFromBurst:
-            detectionRange = detectionRG * self.rangeGateSize + self.rangeGateSize/2
-            self.detectionReports.append([time, detectionRange])
+        for detectionR_RR in detectionsFromBurst:
+            detectionRange = detectionR_RR[0] * self.rangeGateSize + self.rangeGateSize/2
+            if not detectionR_RR[1] == None:
+                detectionRangeRate = (detectionR_RR[1] - self.lowestPositiveDopplerBin) * self.dopplerBinSize + self.dopplerBinSize/2
+            else:
+                detectionRangeRate = None
+            self.detectionReports.append([time, detectionRange, detectionRangeRate])
 
     def operate(self, runtime):
         time = 0.0
@@ -90,7 +98,7 @@ class Radar:
                 ownshipSpeed = self.rfEnvironment.getOwnshipSpeed(time)
                 detectionList, clutterVelocity = self.sip.processBurst(echoesFromBurst, usedPRF, usedCarrierFrequency, ownshipSpeed, az, el)
                 if len(detectionList) > 0:
-                    print(str(time) + ": " + str(detectionList))
+                    
                     if not self.barsWithDetections.__contains__(currentBar):
                         self.barsWithDetections.append(currentBar)
                 self.appendToDetectionList(time, detectionList)

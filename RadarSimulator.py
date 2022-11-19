@@ -60,6 +60,7 @@ class RadarSimulator:
 
         frmCol2 = tk.Frame(pady=10, padx=10)
 
+        
 
         self.btnDrawScenario = tk.Button(master = frmCol2, text="Draw Scenario", width=20, state="disabled")
         self.btnDrawScenario.grid(row = 1, column = 1)

@@ -39,6 +39,9 @@ def vectorToRange(vector):
     result = sqrt(vector[0]**2 + vector[1]**2 + vector[2]**2)
     return result
 
+def calculateLowestPositiveDopplerBin(highestOpeningVel, binSize):
+    return int(abs(highestOpeningVel) / binSize) + 1
+
 def calculateMUR(prf):
     pri = 1/prf
     global c
