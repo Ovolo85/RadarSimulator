@@ -11,7 +11,8 @@ from UtilityFunctions import calculateLowestPositiveDopplerBin
 
 class Radar:
     ## Main Class of the Radar Simulator
-    
+    # TODO: We might have some issues with Euler Angles from time to time...
+
     def __init__(self, radarDataFile, radarSettingFile, rfEnvironment):
         
         self.getRadarDataFromJSON(radarDataFile)

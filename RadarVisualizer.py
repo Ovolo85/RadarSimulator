@@ -70,17 +70,17 @@ class RadarVisualizer:
 
     def plotAllTargetRanges(self, scenario):
         plt.figure()
+        
         for target in range(1, len(scenario)):
+            targetStartTime = scenario[target][0][0]
+            ownshipRowOffset = round(targetStartTime / self.burstLength)
+            
             ranges = []
             
-            for position in scenario[target]:
-                ownshipPosition = []
-                for ownshipPositionCandidate in scenario[0]:
-                    if (np.abs(ownshipPositionCandidate[0] - position[0])) < (self.burstLength / 100):
-                        
-                        ownshipPosition = ownshipPositionCandidate
-                        break
+            for idx, position in enumerate(scenario[target]):
+                ownshipPosition = scenario[0][idx + ownshipRowOffset]
                 ranges.append([position[0], vectorToRange(vectorOwnshipToTarget(ownshipPosition, position))])
+                
             rangesToPlot = np.array(ranges)
             plt.plot(rangesToPlot[:,0], rangesToPlot[:,1])
 
@@ -88,9 +88,61 @@ class RadarVisualizer:
 
         plt.show()
 
-    def plotAllTargetRangeRates(self, scenario):
-        pass
-        # TODO: Implement!
+    def plotSingleTargetRange(self, scenario, tgtNo):
+        plt.figure()
+
+        targetData = scenario[tgtNo]
+        targetStartTime = scenario[tgtNo][0][0]
+        ownshipRowOffset = round(targetStartTime / self.burstLength)
+
+        ranges = []
+
+        for idx, position in enumerate(targetData):
+            ownshipPosition = scenario[0][idx + ownshipRowOffset]
+            ranges.append([position[0], vectorToRange(vectorOwnshipToTarget(ownshipPosition, position))])
+
+        rangesToPlot = np.array(ranges)
+        plt.plot(rangesToPlot[:,0], rangesToPlot[:,1])
+
+        plt.title("Target " + str(tgtNo) + " Range")
+        plt.grid(True)
+
+        plt.show()
+
+    def plotAllTargetRangeRatesAndDetectionReports(self, scenario, detectionReports, clutterVelocities):
+        plt.figure()
+
+        for target in range(1, len(scenario)):
+            targetStartTime = scenario[target][0][0]
+            ownshipRowOffset = round(targetStartTime / self.burstLength)
+            rangeRates = []
+            
+            for idx, position in enumerate(scenario[target]):
+                ownshipPosition = scenario[0][idx + ownshipRowOffset]
+                sightline = vectorOwnshipToTarget(ownshipPosition, position)
+                sightlineSpherical = northEastDown2AzElRange(sightline[0], sightline[1], sightline[2])
+                rangeRate = calculateRangeRate(sightlineSpherical[0], sightlineSpherical[1], 
+                    ownshipPosition[4], ownshipPosition[6], ownshipPosition[5],
+                    position[4], position[6], position[5])
+                
+                rangeRates.append([position[0], rangeRate])
+        # TODO: True RR looks odd. Check Calculation!
+        rangeRatesToPlot = np.array(rangeRates)
+        detectionReportRRsToPlot = np.array(detectionReports)
+        clutterVelocitiesToPlot = np.array(clutterVelocities)
+
+        plt.plot(rangeRatesToPlot[:,0], rangeRatesToPlot[:,1], label="True RR")
+        plt.plot(detectionReportRRsToPlot[:,0], detectionReportRRsToPlot[:,2], "ro", label="Detection Report RR")
+        plt.plot(clutterVelocitiesToPlot[:,0], clutterVelocitiesToPlot[:,1], label="Expected MBC RR")
+
+        plt.title("Range Rates - Truth Data vs Detection Reports incl. MBC Vc")
+
+        plt.legend(loc="upper right")
+        plt.grid()
+        plt.show()
+            
+            
+
 
     def plotAllTargetRangesAndDetectionReports(self, scenario, detectionReports):
         plt.figure()
@@ -117,27 +169,7 @@ class RadarVisualizer:
 
         plt.show()
 
-    def plotSingleTargetRange(self, scenario, tgtNo):
-        plt.figure()
-
-        targetData = scenario[tgtNo]
-        ranges = []
-
-        for position in targetData:
-            ownshipPosition = []
-            # TODO: Range Calc is to slow. use indices instead of time search!
-            for ownshipPositionCandidate in scenario[0]:
-                if (np.abs(ownshipPositionCandidate[0] - position[0])) < (self.burstLength / 100):
-                    ownshipPosition = ownshipPositionCandidate
-                    break
-            ranges.append([position[0], vectorToRange(vectorOwnshipToTarget(ownshipPosition, position))])
-        rangesToPlot = np.array(ranges)
-        plt.plot(rangesToPlot[:,0], rangesToPlot[:,1])
-
-        plt.title("Target " + str(tgtNo) + " Range")
-        plt.grid(True)
-
-        plt.show()
+    
 
     # Setting Plots
 

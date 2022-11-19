@@ -60,39 +60,25 @@ class RadarSimulator:
 
         frmCol2 = tk.Frame(pady=10, padx=10)
 
-        
-
-        self.btnDrawScenario = tk.Button(master = frmCol2, text="Draw Scenario", width=20, state="disabled")
-        self.btnDrawScenario.grid(row = 1, column = 1)
-        self.btnDrawScenario.bind("<Button-1>", self.drawScenario)
-
-        self.btnDrawTgtScenario = tk.Button(master = frmCol2, text="Draw Target Scenario", width=20, state="disabled")
-        self.btnDrawTgtScenario.grid(row = 2, column = 1)
-        self.btnDrawTgtScenario.bind("<Button-1>", self.drawTgtScenario)
-
-        self.btnDrawTgtRanges = tk.Button(master = frmCol2, text="Draw Target Ranges", width=20, state="disabled")
-        self.btnDrawTgtRanges.grid(row = 3, column = 1)
-        self.btnDrawTgtRanges.bind("<Button-1>", self.drawTgtRanges)
-
         self.btnDrawAntennaMovement = tk.Button(master = frmCol2, text="Draw Antenna Movement", width=20, state="disabled")
-        self.btnDrawAntennaMovement.grid(row = 4, column = 1)
+        self.btnDrawAntennaMovement.grid(row = 1, column = 1)
         self.btnDrawAntennaMovement.bind("<Button-1>", self.drawAntennaMovement)
 
+        self.btnDrawClutterVelocities = tk.Button(master = frmCol2, text="Draw Clutter Velocities", width=20, state="disabled")
+        self.btnDrawClutterVelocities.grid(row = 2, column = 1)
+        self.btnDrawClutterVelocities.bind("<Button-1>", self.drawClutterVelocities)
+
         self.btnDrawEchoRanges = tk.Button(master = frmCol2, text="Draw Amb. Echo Ranges", width=20, state="disabled")
-        self.btnDrawEchoRanges.grid(row = 5, column = 1)
+        self.btnDrawEchoRanges.grid(row = 3, column = 1)
         self.btnDrawEchoRanges.bind("<Button-1>", self.drawEchoRanges)
 
         self.btnDrawDetectionRanges = tk.Button(master = frmCol2, text="Draw Det. Report Ranges", width=20, state="disabled")
-        self.btnDrawDetectionRanges.grid(row = 6, column = 1)
+        self.btnDrawDetectionRanges.grid(row = 4, column = 1)
         self.btnDrawDetectionRanges.bind("<Button-1>", self.drawDetectionRanges)
 
-        self.btnDrawEclipsingRanges = tk.Button(master = frmCol2, text="Draw Eclipsing Ranges", width=20, state="disabled")
-        self.btnDrawEclipsingRanges.grid(row = 7, column = 1)
-        self.btnDrawEclipsingRanges.bind("<Button-1>", self.drawRangeEclipsingZones)
-
-        self.btnDrawClutterVelocities = tk.Button(master = frmCol2, text="Draw Clutter Velocities", width=20, state="disabled")
-        self.btnDrawClutterVelocities.grid(row = 8, column = 1)
-        self.btnDrawClutterVelocities.bind("<Button-1>", self.drawClutterVelocities)
+        self.btnDrawDetectionRangeRates = tk.Button(master = frmCol2, text="Draw Det. Report Range Rates", width=20, state="disabled")
+        self.btnDrawDetectionRangeRates.grid(row = 5, column = 1)
+        self.btnDrawDetectionRangeRates.bind("<Button-1>", self.drawDetectionRangeRates)
 
         frmCol2.grid(row=1, column=2, sticky="N")
 
@@ -109,13 +95,31 @@ class RadarSimulator:
         self.btnDrawSingleTgtRange.grid(row = 2, column = 1, columnspan = 2)
         self.btnDrawSingleTgtRange.bind("<Button-1>", self.drawSingleTgtRange)
 
-        
-
         frmCol3.grid(row = 1, column = 3, sticky = "N")
+
+        frmCol4 = tk.Frame(pady = 10, padx = 10)
+
+        self.btnDrawScenario = tk.Button(master = frmCol4, text="Draw Scenario", width=20, state="disabled")
+        self.btnDrawScenario.grid(row = 1, column = 1)
+        self.btnDrawScenario.bind("<Button-1>", self.drawScenario)
+
+        self.btnDrawTgtScenario = tk.Button(master = frmCol4, text="Draw Target Scenario", width=20, state="disabled")
+        self.btnDrawTgtScenario.grid(row = 2, column = 1)
+        self.btnDrawTgtScenario.bind("<Button-1>", self.drawTgtScenario)
+
+        frmCol4.grid(row = 1, column = 4, sticky = "N")
 
         self.statusText = tk.Text(height=15)
         self.statusText.grid(row=2, column=1, columnspan=2)
-        
+
+        frmColB3 = tk.Frame(pady = 10, padx = 10)
+
+        self.btnDrawEclipsingRanges = tk.Button(master = frmColB3, text="Draw Eclipsing Ranges", width=20, state="disabled")
+        self.btnDrawEclipsingRanges.grid(row = 5, column = 1)
+        self.btnDrawEclipsingRanges.bind("<Button-1>", self.drawRangeEclipsingZones)
+
+        frmColB3.grid(row = 2, column = 3, sticky = "N")
+
         window.mainloop()
 
     # Button Methods
@@ -137,7 +141,6 @@ class RadarSimulator:
         self.btnDrawScenario["state"] = "normal"
         self.btnDrawTgtScenario["state"] = "normal"
         self.btnStartRadarSimulation["state"] = "normal"
-        self.btnDrawTgtRanges["state"] = "normal"
         self.btnDrawSingleTgtRange["state"] = "normal"
         self.btnDrawEclipsingRanges["state"] = "normal"
 
@@ -157,6 +160,7 @@ class RadarSimulator:
             self.btnDrawAntennaMovement["state"] = "normal"
             self.btnDrawEchoRanges["state"] = "normal"
             self.btnDrawDetectionRanges["state"] = "normal"
+            self.btnDrawDetectionRangeRates["state"] = "normal"
             self.btnDrawClutterVelocities["state"] = "normal"
 
             self.btnStartRadarSimulation["state"] = "disabled"
@@ -181,9 +185,9 @@ class RadarSimulator:
         if self.btnDrawEchoRanges["state"] != "disabled":
             self.visualizer.plotAllTargetRangesAndDetectionReports(self.scenario, self.simResult["DetectionReports"])
 
-    def drawTgtRanges(self, event):
-        if self.btnDrawTgtRanges["state"] != "disabled":
-            self.visualizer.plotAllTargetRanges(self.scenario)
+    def drawDetectionRangeRates(self, event):
+        if self.btnDrawDetectionRangeRates["state"] != "disabled":
+            self.visualizer.plotAllTargetRangeRatesAndDetectionReports(self.scenario, self.simResult["DetectionReports"], self.simResult["ClutterVelocities"])
 
     def drawSingleTgtRange(self, event):
         if self.btnDrawSingleTgtRange["state"] != "disabled":
