@@ -146,8 +146,12 @@ class RadarSimulator:
 
         self.btnLoadScenario["state"] = "disabled"
 
+        print("Scenario Loaded")
+
     def startRadarSimulation(self, event):
-        if self.btnStartRadarSimulation["state"] == "normal":
+        
+        if self.btnStartRadarSimulation["state"] != "disabled":
+            print("Sim started")
             maxOwnshipTime = self.scenario[0][-1][0]
             print("Simulating " + str(maxOwnshipTime) + "s...")
             startTime = time.time()
@@ -203,6 +207,7 @@ class RadarSimulator:
 
     # Utility
     def provideSimulationStatusText(self, simtime):
+        
         self.statusText.insert(tk.END, "Simulation duration: " + str(simtime) + " s\n")
         self.statusText.insert(tk.END, "Scan Bars with Detections: " + str(self.simResult["BarsWithDetections"]))
 
