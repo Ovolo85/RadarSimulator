@@ -61,8 +61,7 @@ class RfEnvironment:
                     if self.eclipsingEnabled:
                         if measuredRange > calculateEclipsingZoneSize(pw):
                             burstEchoes.append([measuredRange, measuredRangeRate, 0.0, 0.0])
-                        else:
-                            print("Range Eclipsing at Time " + str(time))
+                        
                     else:
                         burstEchoes.append([measuredRange, measuredRangeRate, 0.0, 0.0])
         return burstEchoes

@@ -1,7 +1,7 @@
 import json
 import math
 from numpy import mod
-from UtilityFunctions import calculateMUR, calculateMUV, calculateClutterVel
+from UtilityFunctions import calculateMUR, calculateMUV, calculateClutterVel, calculateLowestPositiveDopplerBin
 
 
 class SignalProcessor:
@@ -14,7 +14,7 @@ class SignalProcessor:
         
         self.highestOpeningVelocity = self.highestClosingVelocity - (self.numberOfDopplerBins * self.dopplerBinSize)
 
-        self.lowestPositiveDopplerBin = int(abs(self.highestOpeningVelocity) / self.dopplerBinSize) + 1  # Doppler bin 0 - 10 m/s if Bin size = 10
+        self.lowestPositiveDopplerBin = calculateLowestPositiveDopplerBin(self.highestOpeningVelocity, self.dopplerBinSize)  # Doppler bin 0 - 10 m/s if Bin size = 10
 
         self.initPrfMurTable()
         self.resolutionIntervalAlarmLists = []
@@ -41,6 +41,9 @@ class SignalProcessor:
         self.maxRangeGate = data["MaxRangeGate"]
         self.numberOfDopplerBins = data["NumberOfDopplerBins"]
         self.highestClosingVelocity = data["HighestClosingVelocity"]
+
+        self.dopplerBinIntegrationTolerance = data["DopplerBinIntegrationTolerance"]
+        self.rangeGateIntegrationTolerance = data["RangeGateIntegrationTolerance"]
 
         self.MBCNotchActive = data["MBCNotchActive"]
         self.MBCNotchType = data["MBCNotchType"]
@@ -69,7 +72,7 @@ class SignalProcessor:
                     ambiguousEchoDopplerBin = math.floor(echo[1]/self.dopplerBinSize) + self.lowestPositiveDopplerBin
                     if abs( ambiguousEchoDopplerBin - ambiguousV_cDopplerBin) <= self.MBCHalfWidthInBins:
                         internalEchoesList.pop(i)
-                        print("MBC Echo Filtered")
+                        # TODO: There are Echoes lost due to Ambiguities with MBC RR. Seems realistic, but double check
             else:
                 print("Unknown Type of MBC Filtering selected.")
 
@@ -122,30 +125,58 @@ class SignalProcessor:
             self.resolutionIntervalAlarmLists.pop(0)
 
         # M/N Processing
-        rangeGateAlarmCounter = []
-        burstDetectionList = []
+        
         potentialBurstDetectionList = []
         
 
         if len(self.resolutionIntervalAlarmLists) == self.n:
             for alarm in self.resolutionIntervalAlarmLists[-1]: # Alarms from last Burst
+                
+                rangeGateAlarmCounter = []
+                dopplerBinAlarmCounter = []
+
                 for rangeGate in alarm[0]:                      # alarm = [[Ranges][RRs]]
                     rangeGateAlarmCounter.append(1)
                     for previousBurst in range(self.n - 1):
                         for previousAlarm in self.resolutionIntervalAlarmLists[previousBurst]:
                             for previousRangeGate in previousAlarm[0]:
-                                if previousRangeGate == rangeGate:
+                                if abs(previousRangeGate - rangeGate) <= self.rangeGateIntegrationTolerance:
                                     rangeGateAlarmCounter[-1] += 1
                     
                 for i in range(len(rangeGateAlarmCounter)):
                     if rangeGateAlarmCounter[i] >= self.m:
-                        potentialBurstDetectionList.append(alarm[0][i])
-                        # TODO: This might be the spot to figure out the RR
+                        
+                        # Range Rate Check
+                        for dopplerBin in alarm[1]:
+                            dopplerBinAlarmCounter.append(1)
+                            for previousBurst in range(self.n -1):
+                                for previousAlarm in self.resolutionIntervalAlarmLists[previousBurst]:
+                                    for previousDopplerBin in previousAlarm[1]:
+                                        if abs(previousDopplerBin - dopplerBin) <= self.dopplerBinIntegrationTolerance:
+                                            dopplerBinAlarmCounter[-1] += 1
+
+                        potentialDopplerBinFound = False
+                        potentialDopplerBin = None
+                        
+                        for idx, dopplerBinCount in enumerate(dopplerBinAlarmCounter):
+                            if dopplerBinCount >= self.m: 
+                                if not potentialDopplerBinFound:
+                                    potentialDopplerBinFound = True
+                                    potentialDopplerBin = alarm[1][idx]
+                                else:
+                                    print("RR set to None due to Ambiguity")
+                                    potentialDopplerBin = None
+                                    break
+                        
+                        # Prepare Output Detection List
+                        potentialBurstDetectionList.append([alarm[0][i], potentialDopplerBin])
+
             
+            # Remove Detections already reported within resolution interval
             for idx, potDet in enumerate(potentialBurstDetectionList):
                 for prevDetList in self.resiDetectionReportList:
                     for prevDet in prevDetList: 
-                        if prevDet == potDet:
+                        if prevDet[0] == potDet[0]:
                             potentialBurstDetectionList.pop(idx)
 
             self.resiDetectionReportList.append(potentialBurstDetectionList)

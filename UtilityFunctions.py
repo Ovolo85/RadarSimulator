@@ -1,5 +1,5 @@
 
-from numpy import arccos, cos, deg2rad, rad2deg, sin, sqrt
+from numpy import arccos, arctan, cos, deg2rad, rad2deg, sin, sqrt
 
 c = 300000000
 
@@ -9,6 +9,18 @@ def azElRange2NorthEastDown(az, el, range):
     down = - range * cos(deg2rad(90-el))
 
     return [north, east, down]
+
+def northEastDown2AzElRange(n, e, d):
+    r = sqrt(n**2 + e**2 + d**2)
+    if e != 0:
+        az = 90 - rad2deg(arctan(n/e))
+    else:
+        az = 0
+    if e < 0:
+        az -= 180
+    el = 90 - rad2deg(arccos(-d/r))
+
+    return [az, el, r]
 
 def headingPitchVelocity2Vector(heading, pitch, velocity):
     east = velocity * sin(deg2rad(90-pitch)) * cos(deg2rad(90-heading)) 
@@ -39,6 +51,9 @@ def vectorToRange(vector):
     result = sqrt(vector[0]**2 + vector[1]**2 + vector[2]**2)
     return result
 
+def calculateLowestPositiveDopplerBin(highestOpeningVel, binSize):
+    return int(abs(highestOpeningVel) / binSize) + 1
+
 def calculateMUR(prf):
     pri = 1/prf
     global c
@@ -58,7 +73,7 @@ def calculateClutterVel(az, el, vel):
     return vel * cos(deg2rad(az)) * cos(deg2rad(el))
 
 def calculateRangeRate(antAz, antEl, ownshipHeading, ownshipPitch, ownshipVel, tgtHeading, tgtPitch, tgtVel):
-    
+    # TODO: is using Antenna Angles correct? Or shall that be the actual sightline?
     ownshipVelVector = headingPitchVelocity2Vector(ownshipHeading, ownshipPitch, ownshipVel)
     tgtVelVector = headingPitchVelocity2Vector(tgtHeading, tgtPitch, tgtVel)
     antennaVector = azElRange2NorthEastDown (antAz, antEl, 200)
