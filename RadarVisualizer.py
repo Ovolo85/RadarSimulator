@@ -115,10 +115,15 @@ class RadarVisualizer:
         for target in range(1, len(scenario)):
             targetStartTime = scenario[target][0][0]
             ownshipRowOffset = round(targetStartTime / self.burstLength)
+            
+            ranges = []
             rangeRates = []
             
             for idx, position in enumerate(scenario[target]):
                 ownshipPosition = scenario[0][idx + ownshipRowOffset]
+
+                r = vectorToRange(vectorOwnshipToTarget(ownshipPosition, position))
+
                 sightline = vectorOwnshipToTarget(ownshipPosition, position)
                 sightlineSpherical = northEastDown2AzElRange(sightline[0], sightline[1], sightline[2])
                 rangeRate = calculateRangeRate(sightlineSpherical[0], sightlineSpherical[1], 
@@ -126,6 +131,11 @@ class RadarVisualizer:
                     position[4], position[6], position[5])
                 
                 rangeRates.append([position[0], rangeRate])
+                ranges.append([position[0], r])
+        
+        r_arr = np.array(ranges)
+        r_arr_diff = np.diff(r_arr[:, 1]) / self.burstLength
+
         # TODO: True RR looks odd. Check Calculation!
         rangeRatesToPlot = np.array(rangeRates)
         detectionReportRRsToPlot = np.array(detectionReports)
@@ -134,6 +144,8 @@ class RadarVisualizer:
         plt.plot(rangeRatesToPlot[:,0], rangeRatesToPlot[:,1], label="True RR")
         plt.plot(detectionReportRRsToPlot[:,0], detectionReportRRsToPlot[:,2], "ro", label="Detection Report RR")
         plt.plot(clutterVelocitiesToPlot[:,0], clutterVelocitiesToPlot[:,1], label="Expected MBC RR")
+
+        plt.plot(r_arr[0:-1, 0], r_arr_diff, label="Ranges Diff")
 
         plt.title("Range Rates - Truth Data vs Detection Reports incl. MBC Vc")
 
