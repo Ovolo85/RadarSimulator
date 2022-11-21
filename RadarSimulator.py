@@ -191,7 +191,7 @@ class RadarSimulator:
 
     def drawDetectionRangeRates(self, event):
         if self.btnDrawDetectionRangeRates["state"] != "disabled":
-            self.visualizer.plotAllTargetRangeRatesAndDetectionReports(self.scenario, self.simResult["DetectionReports"], self.simResult["ClutterVelocities"])
+            self.visualizer.plotAllTargetRangeRatesAndDetectionReports(self.scenario, self.simResult["DetectionReports"])
 
     def drawSingleTgtRange(self, event):
         if self.btnDrawSingleTgtRange["state"] != "disabled":

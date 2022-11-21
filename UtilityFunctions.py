@@ -72,11 +72,11 @@ def calculateEclipsingZoneSize(pw):
 def calculateClutterVel(az, el, vel):
     return vel * cos(deg2rad(az)) * cos(deg2rad(el))
 
-def calculateRangeRate(antAz, antEl, ownshipHeading, ownshipPitch, ownshipVel, tgtHeading, tgtPitch, tgtVel):
-    # TODO: is using Antenna Angles correct? Or shall that be the actual sightline?
+def calculateRangeRate(sightlineAz, sightlineEl, ownshipHeading, ownshipPitch, ownshipVel, tgtHeading, tgtPitch, tgtVel):
+    
     ownshipVelVector = headingPitchVelocity2Vector(ownshipHeading, ownshipPitch, ownshipVel)
     tgtVelVector = headingPitchVelocity2Vector(tgtHeading, tgtPitch, tgtVel)
-    antennaVector = azElRange2NorthEastDown (antAz, antEl, 200)
+    antennaVector = azElRange2NorthEastDown (sightlineAz, sightlineEl, 200)
     
     scalarProductTgt = antennaVector[0]*tgtVelVector[0] + antennaVector[1]*tgtVelVector[1] + antennaVector[2]*tgtVelVector[2] 
     factorTgt = scalarProductTgt / (antennaVector[0]**2 + antennaVector[1]**2 + antennaVector[2]**2)

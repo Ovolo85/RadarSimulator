@@ -44,11 +44,13 @@ class RfEnvironment:
             offBoresightAngle = angleBetweenVectors(toTargetVector, antennaPointingVector)
             if offBoresightAngle < (self.beamWidth+self.beamOverlap) / 2:
                 
-                # TODO: calculate Monopuls               
+                # TODO: calculate Monopuls
+                # TODO: Introduce MBC Returns               
 
                 # Range, RangeRate, DiffAz, DiffEl
                 measuredRange = vectorToRange(toTargetVector)
-                measuredRangeRate = calculateRangeRate(antennaHeading, el, ownshipHeading, ownshipPitch, ownshipVelocity, targetHeading, targetPitch, targetVelocity)
+                targetSightline = northEastDown2AzElRange(toTargetVector[0], toTargetVector[1], toTargetVector[2])
+                measuredRangeRate = calculateRangeRate(targetSightline[0], targetSightline[1], ownshipHeading, ownshipPitch, ownshipVelocity, targetHeading, targetPitch, targetVelocity)
                 if measuredRange < self.maxRange:
                     if self.measurementNoise:
                         measuredRange = measuredRange + np.random.normal(0.0, self.rangeStandardDeviation)
