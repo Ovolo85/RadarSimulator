@@ -101,7 +101,7 @@ class Radar:
                 if len(detectionList) > 0:
                     
                     if not self.barsWithDetections.__contains__(currentBar):
-                        self.barsWithDetections.append(currentBar)
+                        self.barsWithDetections.append([currentBar])
                 self.appendToDetectionList(time, detectionList)
                 self.clutterVelocities.append([time, clutterVelocity])
 
@@ -122,11 +122,12 @@ class Radar:
 
         
         
-        return {"AntennaAngles" : self.antennaAngles, 
-        "Echoes":self.echoes, "BarTimes":self.barTimes, 
-        "BarsWithDetections":self.barsWithDetections, 
-        "DetectionReports": self.detectionReports,
-        "ClutterVelocities": self.clutterVelocities}
+        return {"AntennaAnglesHeader" : ["time", "Azimuth", "Elevation", "Bar"], "AntennaAngles" : self.antennaAngles, 
+        "EchoesHeader":["time", "PRF", "Range", "RangeRate", "Monopuls Az", "Monopuls El"], "Echoes":self.echoes, 
+        "BarTimesHeader": ["BarNumber", "StartTime", "EndTime"], "BarTimes":self.barTimes, 
+        "BarsWithDetectionsHeader": ["BarNumber"], "BarsWithDetections":self.barsWithDetections, 
+        "DetectionReportsHeader": ["time", "Range", "RangeRate"], "DetectionReports": self.detectionReports,
+        "ClutterVelocitiesHeader": ["time", "ClutterVelocity"], "ClutterVelocities": self.clutterVelocities}
 
         
         

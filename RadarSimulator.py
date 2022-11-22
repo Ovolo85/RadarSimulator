@@ -1,3 +1,4 @@
+from OutputStore import OutputStore
 from RadarVisualizer import RadarVisualizer
 from RfEnvironment import RfEnvironment
 from ScenarioProcessor import ScenarioProcessor
@@ -10,7 +11,7 @@ class RadarSimulator:
     
     def __init__(self) -> None:
         self.scenarioProcessor = ScenarioProcessor()
-        
+        self.outputStore = OutputStore()
         
         self.startGUI()
 
@@ -159,7 +160,9 @@ class RadarSimulator:
             endTime = time.time()
             duration = endTime - startTime
 
-            self.provideSimulationStatusText(duration)        
+            self.provideSimulationStatusText(duration)
+
+            self.outputStore.writeSimResultToDisk(self.simResult)        
 
             self.btnDrawAntennaMovement["state"] = "normal"
             self.btnDrawEchoRanges["state"] = "normal"
