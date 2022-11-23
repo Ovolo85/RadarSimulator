@@ -18,6 +18,12 @@ class RadarVisualizer:
         self.burstLength = data["BurstLength"]
         self.pw = data["PulseWidth"]
 
+        self.DopplerBinSize = data["DopplerBinSize"]
+
+        self.MBCNotchActive = data["MBCNotchActive"]
+        self.MBCNotchType = data["MBCNotchType"]
+        self.MBCHalfWidthInBins = data["MBCHalfWidthInBins"]
+
     def getSimDataFromJson(self, simDataFile):
         with open(simDataFile) as json_file:
             data = json.load(json_file)
@@ -109,7 +115,7 @@ class RadarVisualizer:
 
         plt.show()
 
-    def plotAllTargetRangeRatesAndDetectionReports(self, scenario, detectionReports, clutterVelocities):
+    def plotAllTargetRangeRatesAndDetectionReports(self, scenario, detectionReports):
         plt.figure()
 
         for target in range(1, len(scenario)):
@@ -118,6 +124,7 @@ class RadarVisualizer:
             
             ranges = []
             rangeRates = []
+            clutterVelocitiesInSightline = []
             
             for idx, position in enumerate(scenario[target]):
                 ownshipPosition = scenario[0][idx + ownshipRowOffset]
@@ -131,21 +138,26 @@ class RadarVisualizer:
                     position[4], position[6], position[5])
                 
                 rangeRates.append([position[0], rangeRate])
+                clutterVelocitiesInSightline.append([position[0], calculateClutterVel(sightlineSpherical[0], sightlineSpherical[1], ownshipPosition[5])])
                 ranges.append([position[0], r])
         
         r_arr = np.array(ranges)
         r_arr_diff = np.diff(r_arr[:, 1]) / self.burstLength
 
-        # TODO: True RR looks odd. Check Calculation!
         rangeRatesToPlot = np.array(rangeRates)
         detectionReportRRsToPlot = np.array(detectionReports)
-        clutterVelocitiesToPlot = np.array(clutterVelocities)
+        clutterVelocitiesToPlot = np.array(clutterVelocitiesInSightline)
+        clutterVelocitiesToPlotMax = clutterVelocitiesToPlot[:,1] + self.MBCHalfWidthInBins * self.DopplerBinSize + self.DopplerBinSize/2
+        clutterVelocitiesToPlotMin = clutterVelocitiesToPlot[:,1] - self.MBCHalfWidthInBins * self.DopplerBinSize - self.DopplerBinSize/2
 
         plt.plot(rangeRatesToPlot[:,0], rangeRatesToPlot[:,1], label="True RR")
         plt.plot(detectionReportRRsToPlot[:,0], detectionReportRRsToPlot[:,2], "ro", label="Detection Report RR")
         plt.plot(clutterVelocitiesToPlot[:,0], clutterVelocitiesToPlot[:,1], label="Expected MBC RR")
+        plt.plot(clutterVelocitiesToPlot[:, 0], clutterVelocitiesToPlotMax, "--")
+        plt.plot(clutterVelocitiesToPlot[:, 0], clutterVelocitiesToPlotMin, "--")
 
-        plt.plot(r_arr[0:-1, 0], r_arr_diff, label="Ranges Diff")
+        # A Testplot whicht alternatively retrieves the RRs from the Position Delta
+        # plt.plot(r_arr[0:-1, 0], r_arr_diff, label="Ranges Diff")
 
         plt.title("Range Rates - Truth Data vs Detection Reports incl. MBC Vc")
 

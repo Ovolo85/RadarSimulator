@@ -66,6 +66,7 @@ class SignalProcessor:
         ambiguousV_cDopplerBin = math.floor(ambiguousV_c/self.dopplerBinSize) + self.lowestPositiveDopplerBin
         
         # Perform MBC Filtering
+        # TODO: store the filtered Echoes to make them analyzable
         if self.MBCNotchActive:
             if self.MBCNotchType == "static":
                 for i, echo in enumerate(internalEchoesList):
@@ -173,6 +174,7 @@ class SignalProcessor:
 
             
             # Remove Detections already reported within resolution interval
+            # TODO: Still double reports, possibly due to RG Jumps in neighboring RCs
             for idx, potDet in enumerate(potentialBurstDetectionList):
                 for prevDetList in self.resiDetectionReportList:
                     for prevDet in prevDetList: 
@@ -183,6 +185,7 @@ class SignalProcessor:
             if len(self.resiDetectionReportList) > self.n:
                 self.resiDetectionReportList.pop(0)
 
+        # TODO: Returning a "Potential" List seems odd
         return potentialBurstDetectionList, V_c
 
 

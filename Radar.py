@@ -29,6 +29,7 @@ class Radar:
         # Lists for Simulation Results
         self.antennaAngles = []
         self.echoes = []
+        self.rangeEclipsedEchoes = []
         self.barTimes = []
         self.barsWithDetections = []
         self.detectionReports = []
@@ -67,6 +68,10 @@ class Radar:
         for echo in echolistFromMeasurement:
             self.echoes.append([time, prf, echo[0], echo[1], echo[2], echo[3]])
     
+    def appendToRangeEclipsedEchoList(self, time, prf, rangeEclipsedEcholistFromMeasurement):
+        for echo in rangeEclipsedEcholistFromMeasurement:
+            self.rangeEclipsedEchoes.append([time, prf, echo[0], echo[1], echo[2], echo[3]])
+    
     def appendToDetectionList(self, time, detectionsFromBurst):
         for detectionR_RR in detectionsFromBurst:
             detectionRange = detectionR_RR[0] * self.rangeGateSize + self.rangeGateSize/2
@@ -92,8 +97,9 @@ class Radar:
                 az, el, bar = self.scanner.moveScanner(self.burstLength)
                 
                 # Receiver
-                usedCarrierFrequency, usedPRF, echoesFromBurst = self.receiver.measureBurst(az, el, time)
+                usedCarrierFrequency, usedPRF, echoesFromBurst, rangeEclipsedEchoesFromBurst = self.receiver.measureBurst(az, el, time)
                 self.appendToEchoList(time, usedPRF, echoesFromBurst)
+                self.appendToRangeEclipsedEchoList(time, usedPRF, rangeEclipsedEchoesFromBurst)
                 
                 # Signal Processor
                 ownshipSpeed = self.rfEnvironment.getOwnshipSpeed(time)
@@ -101,7 +107,7 @@ class Radar:
                 if len(detectionList) > 0:
                     
                     if not self.barsWithDetections.__contains__(currentBar):
-                        self.barsWithDetections.append(currentBar)
+                        self.barsWithDetections.append([currentBar])
                 self.appendToDetectionList(time, detectionList)
                 self.clutterVelocities.append([time, clutterVelocity])
 
@@ -122,11 +128,13 @@ class Radar:
 
         
         
-        return {"AntennaAngles" : self.antennaAngles, 
-        "Echoes":self.echoes, "BarTimes":self.barTimes, 
-        "BarsWithDetections":self.barsWithDetections, 
-        "DetectionReports": self.detectionReports,
-        "ClutterVelocities": self.clutterVelocities}
+        return {"AntennaAnglesHeader" : ["time", "Azimuth", "Elevation", "Bar"], "AntennaAngles" : self.antennaAngles, 
+        "EchoesHeader":["time", "PRF", "Range", "RangeRate", "Monopuls Az", "Monopuls El"], "Echoes":self.echoes, 
+        "RangeEchlipsedEchoesHeader":["time", "PRF", "Range", "RangeRate", "Monopuls Az", "Monopuls El"], "RangeEclipsedEchoes":self.rangeEclipsedEchoes,
+        "BarTimesHeader": ["BarNumber", "StartTime", "EndTime"], "BarTimes":self.barTimes, 
+        "BarsWithDetectionsHeader": ["BarNumber"], "BarsWithDetections":self.barsWithDetections, 
+        "DetectionReportsHeader": ["time", "Range", "RangeRate"], "DetectionReports": self.detectionReports,
+        "ClutterVelocitiesHeader": ["time", "ClutterVelocity"], "ClutterVelocities": self.clutterVelocities}
 
         
         

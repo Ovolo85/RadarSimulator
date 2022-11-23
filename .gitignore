@@ -1,3 +1,6 @@
+output/
+__pycache__/
+RadarSubSys/__pycache__/
 *.pyc
 __pycache__/Radar.cpython-310.pyc
 __pycache__/Radar.cpython-310.pyc
@@ -30,3 +33,14 @@ RadarSubSys/__pycache__/Receiver.cpython-311.pyc
 RadarSubSys/__pycache__/Scanner.cpython-311.pyc
 RadarSubSys/__pycache__/SignalProcessor.cpython-311.pyc
 RadarSubSys/__pycache__/Tracker.cpython-311.pyc
+output/AntennaAngles.csv
+output/BarsWithDetections.csv
+output/BarTimes.csv
+output/ClutterVelocities.csv
+output/DetectionReports.csv
+output/Echoes.csv
+__pycache__/Radar.cpython-310.pyc
+__pycache__/RfEnvironment.cpython-310.pyc
+output/.ipynb_checkpoints/RadarSimResults-checkpoint.ipynb
+output/RadarSimResults.ipynb
+output/RangeEclipsedEchoes.csv

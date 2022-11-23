@@ -16,6 +16,7 @@ class RfEnvironment:
         # TODO: Implement Resolution criteria
 
         burstEchoes = []
+        rangeEclipsedEchoes = []
 
         targetPositionsAtTime = []
         for target in range(len(self.scenario)-1):
@@ -44,11 +45,13 @@ class RfEnvironment:
             offBoresightAngle = angleBetweenVectors(toTargetVector, antennaPointingVector)
             if offBoresightAngle < (self.beamWidth+self.beamOverlap) / 2:
                 
-                # TODO: calculate Monopuls               
+                # TODO: calculate Monopuls
+                # TODO: Introduce MBC Returns               
 
                 # Range, RangeRate, DiffAz, DiffEl
                 measuredRange = vectorToRange(toTargetVector)
-                measuredRangeRate = calculateRangeRate(antennaHeading, el, ownshipHeading, ownshipPitch, ownshipVelocity, targetHeading, targetPitch, targetVelocity)
+                targetSightline = northEastDown2AzElRange(toTargetVector[0], toTargetVector[1], toTargetVector[2])
+                measuredRangeRate = calculateRangeRate(targetSightline[0], targetSightline[1], ownshipHeading, ownshipPitch, ownshipVelocity, targetHeading, targetPitch, targetVelocity)
                 if measuredRange < self.maxRange:
                     if self.measurementNoise:
                         measuredRange = measuredRange + np.random.normal(0.0, self.rangeStandardDeviation)
@@ -58,13 +61,15 @@ class RfEnvironment:
                     measuredRange = mod(measuredRange, calculateMUR(prf))
                     measuredRangeRate = mod(measuredRangeRate, calculateMUV(prf, frq))
                     
+                    # Filter for eclipsing
                     if self.eclipsingEnabled:
                         if measuredRange > calculateEclipsingZoneSize(pw):
                             burstEchoes.append([measuredRange, measuredRangeRate, 0.0, 0.0])
-                        
+                        else:
+                            rangeEclipsedEchoes.append([measuredRange, measuredRangeRate, 0.0, 0.0])
                     else:
                         burstEchoes.append([measuredRange, measuredRangeRate, 0.0, 0.0])
-        return burstEchoes
+        return burstEchoes, rangeEclipsedEchoes
         
     # TODO: Maybe this would better be located in a "Ownship" Simulation? Instead of RF Environment...
     def getOwnshipSpeed(self, time):

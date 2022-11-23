@@ -25,8 +25,9 @@ class Receiver:
 
     def measureBurst(self, az, el, time):
         #TODO: Burst ID necessary?
-        echoes = self.rfEnvironment.measure(self.carrierFrequency, self.prfs[self.currentPrf], self.pulseWidth, az, el, time)
+        echoes, rangeEclipsedEchoes = self.rfEnvironment.measure(self.carrierFrequency, self.prfs[self.currentPrf], self.pulseWidth, az, el, time)
         usedPrf = self.currentPrf
         self.currentPrf += 1
         self.currentPrf = mod(self.currentPrf, self.numberOfPrfs)
-        return [self.carrierFrequency, usedPrf, echoes]
+        # TODO: Design Flaw: RangeEclipsedEchoes get now routed throuch the Radar just to report them for analysis... 
+        return [self.carrierFrequency, usedPrf, echoes, rangeEclipsedEchoes]
