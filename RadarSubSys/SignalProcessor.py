@@ -66,6 +66,7 @@ class SignalProcessor:
         ambiguousV_cDopplerBin = math.floor(ambiguousV_c/self.dopplerBinSize) + self.lowestPositiveDopplerBin
         
         # Perform MBC Filtering
+        # TODO: store the filtered Echoes to make them analyzable
         if self.MBCNotchActive:
             if self.MBCNotchType == "static":
                 for i, echo in enumerate(internalEchoesList):
