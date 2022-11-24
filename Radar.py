@@ -33,6 +33,7 @@ class Radar:
         self.barTimes = []
         self.barsWithDetections = []
         self.detectionReports = []
+        self.filteredEchoes = []
         self.clutterVelocities = []
         self.highestOpeningVelocity = self.highestClosingVelocity - (self.numberOfDopplerBins * self.dopplerBinSize)
         self.lowestPositiveDopplerBin = calculateLowestPositiveDopplerBin(self.highestOpeningVelocity, self.dopplerBinSize)
@@ -67,6 +68,10 @@ class Radar:
     def appendToEchoList(self, time, prf, echolistFromMeasurement):
         for echo in echolistFromMeasurement:
             self.echoes.append([time, prf, echo[0], echo[1], echo[2], echo[3]])
+
+    def appendToFilteredEchoList(self, time, prf, filteredEchoList):
+        for echo in filteredEchoList:
+            self.filteredEchoes.append([time, prf, echo[0], echo[1], echo[2], echo[3]])
     
     def appendToRangeEclipsedEchoList(self, time, prf, rangeEclipsedEcholistFromMeasurement):
         for echo in rangeEclipsedEcholistFromMeasurement:
@@ -103,13 +108,13 @@ class Radar:
                 
                 # Signal Processor
                 ownshipSpeed = self.rfEnvironment.getOwnshipSpeed(time)
-                detectionList, clutterVelocity = self.sip.processBurst(echoesFromBurst, usedPRF, usedCarrierFrequency, ownshipSpeed, az, el)
+                detectionList, clutterVelocity, filteredEchoesList = self.sip.processBurst(echoesFromBurst, usedPRF, usedCarrierFrequency, ownshipSpeed, az, el)
                 if len(detectionList) > 0:
-                    
                     if not self.barsWithDetections.__contains__(currentBar):
                         self.barsWithDetections.append([currentBar])
                 self.appendToDetectionList(time, detectionList)
                 self.clutterVelocities.append([time, clutterVelocity])
+                self.appendToFilteredEchoList(time, usedPRF, filteredEchoesList)
 
                 # Turn Around Management
                 if az == self.scanHalfWidth + self.scanCenter[0]:
@@ -134,6 +139,7 @@ class Radar:
         "BarTimesHeader": ["BarNumber", "StartTime", "EndTime"], "BarTimes":self.barTimes, 
         "BarsWithDetectionsHeader": ["BarNumber"], "BarsWithDetections":self.barsWithDetections, 
         "DetectionReportsHeader": ["time", "Range", "RangeRate"], "DetectionReports": self.detectionReports,
+        "FilteredEchoesHeader": ["time", "PRF", "Range", "RangeRate", "Monopuls Az", "Monopulse El"], "FilteredEchoes": self.filteredEchoes,
         "ClutterVelocitiesHeader": ["time", "ClutterVelocity"], "ClutterVelocities": self.clutterVelocities}
 
         

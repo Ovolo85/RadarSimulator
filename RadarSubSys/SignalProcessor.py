@@ -17,10 +17,13 @@ class SignalProcessor:
         self.lowestPositiveDopplerBin = calculateLowestPositiveDopplerBin(self.highestOpeningVelocity, self.dopplerBinSize)  # Doppler bin 0 - 10 m/s if Bin size = 10
 
         self.initPrfMurTable()
-        self.resolutionIntervalAlarmLists = []
-        self.lastBurstDetectionList = []
-
+        
+        self.resiAlarmLists = []
         self.resiDetectionReportList = []
+        
+        #self.lastBurstDetectionList = []
+
+        
         
     def initPrfMurTable(self):
         self.prfMurTable = []
@@ -52,6 +55,7 @@ class SignalProcessor:
     def processBurst(self, echoes, prf, frequency, velocity, azimuth, elevation):
         
         burstAlarmList = []
+        filteredEchoesList = []
         internalEchoesList = echoes
 
         # Get Muv and Mur
@@ -72,6 +76,7 @@ class SignalProcessor:
                 for i, echo in enumerate(internalEchoesList):
                     ambiguousEchoDopplerBin = math.floor(echo[1]/self.dopplerBinSize) + self.lowestPositiveDopplerBin
                     if abs( ambiguousEchoDopplerBin - ambiguousV_cDopplerBin) <= self.MBCHalfWidthInBins:
+                        filteredEchoesList.append(echo)
                         internalEchoesList.pop(i)
                         # TODO: There are Echoes lost due to Ambiguities with MBC RR. Seems realistic, but double check
             else:
@@ -121,17 +126,17 @@ class SignalProcessor:
                 
         
         # Construct RESI Alarm List, contains the last N Burst Alarm Lists
-        self.resolutionIntervalAlarmLists.append(burstAlarmList)
-        if len(self.resolutionIntervalAlarmLists) > self.n:
-            self.resolutionIntervalAlarmLists.pop(0)
+        self.resiAlarmLists.append(burstAlarmList)
+        if len(self.resiAlarmLists) > self.n:
+            self.resiAlarmLists.pop(0)
 
         # M/N Processing
         
         potentialBurstDetectionList = []
         
 
-        if len(self.resolutionIntervalAlarmLists) == self.n:
-            for alarm in self.resolutionIntervalAlarmLists[-1]: # Alarms from last Burst
+        if len(self.resiAlarmLists) == self.n:
+            for alarm in self.resiAlarmLists[-1]: # Alarms from last Burst
                 
                 rangeGateAlarmCounter = []
                 dopplerBinAlarmCounter = []
@@ -139,7 +144,7 @@ class SignalProcessor:
                 for rangeGate in alarm[0]:                      # alarm = [[Ranges][RRs]]
                     rangeGateAlarmCounter.append(1)
                     for previousBurst in range(self.n - 1):
-                        for previousAlarm in self.resolutionIntervalAlarmLists[previousBurst]:
+                        for previousAlarm in self.resiAlarmLists[previousBurst]:
                             for previousRangeGate in previousAlarm[0]:
                                 if abs(previousRangeGate - rangeGate) <= self.rangeGateIntegrationTolerance:
                                     rangeGateAlarmCounter[-1] += 1
@@ -151,7 +156,7 @@ class SignalProcessor:
                         for dopplerBin in alarm[1]:
                             dopplerBinAlarmCounter.append(1)
                             for previousBurst in range(self.n -1):
-                                for previousAlarm in self.resolutionIntervalAlarmLists[previousBurst]:
+                                for previousAlarm in self.resiAlarmLists[previousBurst]:
                                     for previousDopplerBin in previousAlarm[1]:
                                         if abs(previousDopplerBin - dopplerBin) <= self.dopplerBinIntegrationTolerance:
                                             dopplerBinAlarmCounter[-1] += 1
@@ -186,7 +191,7 @@ class SignalProcessor:
                 self.resiDetectionReportList.pop(0)
 
         # TODO: Returning a "Potential" List seems odd
-        return potentialBurstDetectionList, V_c
+        return potentialBurstDetectionList, V_c, filteredEchoesList
 
 
                         
