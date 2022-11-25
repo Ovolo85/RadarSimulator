@@ -3,6 +3,7 @@ from operator import mod
 class Receiver:
 # This class mainly encapsulates PRF selection.
 
+    # TODO: add a mode design instead of handing over RF parameters in the constructor
     def __init__(self, carrierFrequencies, frequencyAgility,  prfs, pw, rfEnvironment):
         self.carrierFrequencies = carrierFrequencies
         self.frequencyAgility = frequencyAgility

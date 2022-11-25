@@ -15,34 +15,41 @@ class RfEnvironment:
         
         # TODO: Implement Resolution criteria
 
+        # Intialize Data Structures
         burstEchoes = []
         rangeEclipsedEchoes = []
-
         targetPositionsAtTime = []
-        for target in range(len(self.scenario)-1):
-            targetStartTime = self.scenario[target+1][0][0]
+
+        # Check the start time of the targets, targetPositionsAtTime will held all target row numbers afterwards
+        for target in range(1, len(self.scenario)):
+            targetStartTime = self.scenario[target][0][0]
             if targetStartTime <= time:
                 timeFromTargetStartTime = time - targetStartTime
                 targetPositionRow = round(timeFromTargetStartTime / self.burstLength)
-                if targetPositionRow < len(self.scenario[target+1]):
-                    targetPositionsAtTime.append(self.scenario[target+1][targetPositionRow])
+                if targetPositionRow < len(self.scenario[target]):
+                    targetPositionsAtTime.append(self.scenario[target][targetPositionRow])
 
         ownshipPositionAtTime = self.scenario[0][round(time / self.burstLength)]
-        antennaHeading = mod(az + ownshipPositionAtTime[4], 360)
+        
+        # Calculate the Antenna Sightline Vector
+        antennaHeading = mod(az + ownshipPositionAtTime[4], 360) # correct Antenna Azimuth for Heading
         antennaPointingVector = azElRange2NorthEastDown(antennaHeading, el, 1000)
 
         ownshipHeading = ownshipPositionAtTime[4]
         ownshipVelocity = ownshipPositionAtTime[5]
         ownshipPitch = ownshipPositionAtTime[6]
 
+        # Test all targets for mainbeam coverage
         for target in range(len(targetPositionsAtTime)):
+            
             toTargetVector = vectorOwnshipToTarget(ownshipPositionAtTime, targetPositionsAtTime[target])
+            offBoresightAngle = angleBetweenVectors(toTargetVector, antennaPointingVector)
             
             targetHeading = targetPositionsAtTime[target][4]
             targetVelocity = targetPositionsAtTime[target][5]
             targetPitch = targetPositionsAtTime[target][6]
             
-            offBoresightAngle = angleBetweenVectors(toTargetVector, antennaPointingVector)
+            # TODO: Find a better technique to replace the Overlap...
             if offBoresightAngle < (self.beamWidth+self.beamOverlap) / 2:
                 
                 # TODO: calculate Monopuls
@@ -52,6 +59,8 @@ class RfEnvironment:
                 measuredRange = vectorToRange(toTargetVector)
                 targetSightline = northEastDown2AzElRange(toTargetVector[0], toTargetVector[1], toTargetVector[2])
                 measuredRangeRate = calculateRangeRate(targetSightline[0], targetSightline[1], ownshipHeading, ownshipPitch, ownshipVelocity, targetHeading, targetPitch, targetVelocity)
+                
+                # TODO: Probabilistic approach based on RCS to get max ranges?
                 if measuredRange < self.maxRange:
                     if self.measurementNoise:
                         measuredRange = measuredRange + np.random.normal(0.0, self.rangeStandardDeviation)

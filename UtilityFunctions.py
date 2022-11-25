@@ -60,6 +60,7 @@ def calculateMUR(prf):
     mur = (c * pri) / 2
     return mur
 
+# TODO: Check MUV if correct
 def calculateMUV(prf, f_tx):
     muv = (c * prf)/(2*f_tx)
     return muv
@@ -99,11 +100,4 @@ def calculateRangeRate(sightlineAz, sightlineEl, ownshipHeading, ownshipPitch, o
 
     return rangeRateTgt + rangeRateOwnship
     
-if __name__ == "__main__":
-    #print(azElRange2NorthEastDown(-135, -10, 1000))
-    #print(angleBetweenVectors([1,1,1], [1,2,1]))
-    #print(calculateMUR(1000))
-    #print(calculateEclipsingZoneSize(0.000003))
-    #print(headingPitchVelocity2Vector(45, 10, 200))
-    #print(calculateRangeRate(antAz=45, antEl=0, ownshipHeading=45, ownshipPitch=0, ownshipVel=200, tgtHeading=135, tgtPitch=0, tgtVel=200))
-    print(calculateMUV(24000, 10000000000))
+
