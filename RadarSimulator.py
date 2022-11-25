@@ -1,3 +1,4 @@
+from threading import Thread
 from OutputStore import OutputStore
 from RadarVisualizer import RadarVisualizer
 from RfEnvironment import RfEnvironment
@@ -181,8 +182,12 @@ class RadarSimulator:
             self.visualizer.plotTargetScenarioTopDown(self.scenario)
 
     def drawAntennaMovement(self, event):
+        
         if self.btnDrawAntennaMovement["state"] != "disabled":
-            self.visualizer.plotAntennaMovement(self.simResult["AntennaAngles"])
+            thread = Thread(target=self.visualizer.plotAntennaMovement, args=[self.simResult["AntennaAngles"]])
+            thread.start()
+
+            #self.visualizer.plotAntennaMovement(self.simResult["AntennaAngles"])
 
     def drawEchoRanges(self, event):
         if self.btnDrawEchoRanges["state"] != "disabled":

@@ -52,7 +52,10 @@ class RfEnvironment:
             # TODO: Find a better technique to replace the Overlap...
             if offBoresightAngle < (self.beamWidth+self.beamOverlap) / 2:
                 
-                # TODO: calculate Monopuls
+                # TODO: calculate Monopuls, check Monopuls calculation
+
+                azMonopuls = calculateAzMonopuls(toTargetVector, antennaPointingVector)
+
                 # TODO: Introduce MBC Returns               
 
                 # Range, RangeRate, DiffAz, DiffEl
@@ -73,11 +76,11 @@ class RfEnvironment:
                     # Filter for eclipsing
                     if self.eclipsingEnabled:
                         if measuredRange > calculateEclipsingZoneSize(pw):
-                            burstEchoes.append([measuredRange, measuredRangeRate, 0.0, 0.0])
+                            burstEchoes.append([measuredRange, measuredRangeRate, azMonopuls, 0.0])
                         else:
-                            rangeEclipsedEchoes.append([measuredRange, measuredRangeRate, 0.0, 0.0])
+                            rangeEclipsedEchoes.append([measuredRange, measuredRangeRate, azMonopuls, 0.0])
                     else:
-                        burstEchoes.append([measuredRange, measuredRangeRate, 0.0, 0.0])
+                        burstEchoes.append([measuredRange, measuredRangeRate, azMonopuls, 0.0])
         return burstEchoes, rangeEclipsedEchoes
         
     # TODO: Maybe this would better be located in a "Ownship" Simulation? Instead of RF Environment...

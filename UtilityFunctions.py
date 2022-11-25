@@ -99,5 +99,40 @@ def calculateRangeRate(sightlineAz, sightlineEl, ownshipHeading, ownshipPitch, o
         print("Radar Looking Backwards!")
 
     return rangeRateTgt + rangeRateOwnship
-    
 
+def projectVectorOnPlane(vector, normal):
+    scalarProduct = vector[0]*normal[0] + vector[1]*normal[1] + vector[2]*normal[2]
+    factor = scalarProduct / (normal[0]**2 + normal[1]**2 + normal[2]**2)
+    projectionOnNormal = [factor*normal[0], factor*normal[1], factor*normal[2]]
+    projectionOnPlane = [vector[0]-projectionOnNormal[0], vector[1]-projectionOnNormal[1], vector[2]-projectionOnNormal[2]]
+    return projectionOnPlane
+
+def calculateAzMonopuls(targetSightline, antennaSightline):
+    normalVector = [0,0,-1000] # NED
+    targetOnPlane = projectVectorOnPlane(targetSightline, normalVector)
+    targetOnPlaneNorm = normalizeVector(targetOnPlane)
+    antennaOnPlane = projectVectorOnPlane(antennaSightline, normalVector)
+    antennaOnPlaneNorm = normalizeVector(antennaOnPlane)
+    azMonopuls = angleBetweenVectors(targetOnPlane, antennaOnPlane)
+    
+    # get the correct sign
+    # TODO: Ugly!
+    if antennaOnPlaneNorm[0] > 0:
+        if targetOnPlaneNorm[0] > 0:
+            if targetOnPlaneNorm[1] < antennaOnPlaneNorm[1]:
+                azMonopuls = azMonopuls * -1
+        else:
+            azMonopuls = azMonopuls * -1
+    else:
+        if targetOnPlaneNorm[0] < 0:
+            if targetOnPlaneNorm[1] > antennaOnPlaneNorm[1]:
+                azMonopuls = azMonopuls * -1
+        else:
+            azMonopuls = azMonopuls * -1
+    
+    return azMonopuls
+
+def normalizeVector(vector):
+    length = sqrt(vector[0]**2 + vector[1]**2 + vector[2]**2)
+    normVec = [vector[0]/length, vector[1]/length, vector[2]/length]
+    return normVec
