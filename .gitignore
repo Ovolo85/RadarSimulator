@@ -44,3 +44,4 @@ __pycache__/RfEnvironment.cpython-310.pyc
 output/.ipynb_checkpoints/RadarSimResults-checkpoint.ipynb
 output/RadarSimResults.ipynb
 output/RangeEclipsedEchoes.csv
+test.py

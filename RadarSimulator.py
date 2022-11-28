@@ -14,11 +14,13 @@ class RadarSimulator:
         self.scenarioProcessor = ScenarioProcessor()
         self.outputStore = OutputStore()
         
+        self.windowHandlerList = []
+
         self.startGUI()
 
     def startGUI(self):
 
-        window = tk.Tk()
+        self.window = tk.Tk()
 
         frmCol1 = tk.Frame(pady=10, padx=10)
 
@@ -122,7 +124,7 @@ class RadarSimulator:
 
         frmColB3.grid(row = 2, column = 3, sticky = "N")
 
-        window.mainloop()
+        self.window.mainloop()
 
     # Button Methods
 
@@ -184,10 +186,11 @@ class RadarSimulator:
     def drawAntennaMovement(self, event):
         
         if self.btnDrawAntennaMovement["state"] != "disabled":
-            thread = Thread(target=self.visualizer.plotAntennaMovement, args=[self.simResult["AntennaAngles"]])
-            thread.start()
+            self.window.update()
+            #thread = Thread(target=self.visualizer.plotAntennaMovement, args=[self.simResult["AntennaAngles"]])
+            #thread.start()
 
-            #self.visualizer.plotAntennaMovement(self.simResult["AntennaAngles"])
+            self.visualizer.plotAntennaMovement(self.simResult["AntennaAngles"])
 
     def drawEchoRanges(self, event):
         if self.btnDrawEchoRanges["state"] != "disabled":
@@ -211,7 +214,9 @@ class RadarSimulator:
 
     def drawClutterVelocities(self, event):
         if self.btnDrawClutterVelocities["state"] != "disabled":
-            self.visualizer.plotClutterVelocities(self.simResult["ClutterVelocities"])
+            newWin = tk.Toplevel(self.window)
+            self.visualizer.plotClutterVelocities(self.simResult["ClutterVelocities"], newWin)
+            #self.windowHandlerList.append(newWin)
 
     # Utility
     def provideSimulationStatusText(self, simtime):

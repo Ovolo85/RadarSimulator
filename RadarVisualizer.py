@@ -1,7 +1,10 @@
+import matplotlib
 import matplotlib.pyplot as plt
 #from mpldatacursor import datacursor
 import numpy as np
 import json
+import tkinter as tk
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from UtilityFunctions import *
 
 class RadarVisualizer:
@@ -223,6 +226,8 @@ class RadarVisualizer:
 
     def plotAntennaMovement(self, antennaAngles):
         
+        print(matplotlib.get_backend())
+
         arrayToPlot = np.array(antennaAngles)
 
         plt.figure()
@@ -260,17 +265,30 @@ class RadarVisualizer:
         plt.grid(True)
         plt.show()
 
-    def plotClutterVelocities(self, clutterVelocities):
+    # def plotClutterVelocities(self, clutterVelocities):
+    #     vcArray = np.array(clutterVelocities)
+        
+    #     plt.figure()
+
+    #     plt.plot(vcArray[:,0], vcArray[:,1])
+    #     plt.title("Clutter Velocities - V_C")
+    #     plt.grid()
+    #     plt.show()
+
+    # TODO: change all plot functions to this new style
+    # TODO: check why the Plots no longer rescale in X
+    def plotClutterVelocities(self, clutterVelocities, newWin):
+        
         vcArray = np.array(clutterVelocities)
         
-        plt.figure()
+        figure = plt.Figure()
+        ax = figure.add_subplot(111)
+        ax.plot(vcArray[:,0], vcArray[:,1])
+        canvas = FigureCanvasTkAgg(figure, newWin)
+        canvas.get_tk_widget().pack(side=tk.LEFT, fill=tk.BOTH)
+        ax.set_title("Clutter Velocities - V_C")
 
-        plt.plot(vcArray[:,0], vcArray[:,1])
-        plt.title("Clutter Velocities - V_C")
-        plt.grid()
-        plt.show()
-
-
+        
 
         
 
