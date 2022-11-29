@@ -120,6 +120,7 @@ class SignalProcessor:
                     velBinCandidates.append(math.floor(velCandidate/self.dopplerBinSize) + self.lowestPositiveDopplerBin)
                     velCandidate += muv
                 
+                # TODO: Is this the point to append the MP's? 
                 burstAlarmList.append([])
                 burstAlarmList[-1].append(rangeGateCandidates)
                 burstAlarmList[-1].append(velBinCandidates)                

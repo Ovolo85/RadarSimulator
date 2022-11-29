@@ -1,4 +1,4 @@
-from threading import Thread
+
 from OutputStore import OutputStore
 from RadarVisualizer import RadarVisualizer
 from RfEnvironment import RfEnvironment
@@ -21,6 +21,7 @@ class RadarSimulator:
     def startGUI(self):
 
         self.window = tk.Tk()
+        self.window.wm_title("Radar Tracker Testbed")
 
         frmCol1 = tk.Frame(pady=10, padx=10)
 

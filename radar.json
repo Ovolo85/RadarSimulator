@@ -14,7 +14,7 @@
     
     "RangeStandardDeviation": 20.0,
     "VelocityStandardDeviation": 1.0,
-    "MonopulseStandardDeviation":0.2,
+    "MonopulseStandardDeviation":0.1,
     
     "RangeGateSize": 128, 
     "DopplerBinSize":5, 

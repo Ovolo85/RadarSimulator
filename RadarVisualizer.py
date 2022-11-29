@@ -1,10 +1,12 @@
 import matplotlib
+from matplotlib.backend_bases import NavigationToolbar2
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 #from mpldatacursor import datacursor
 import numpy as np
 import json
 import tkinter as tk
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 from UtilityFunctions import *
 
 class RadarVisualizer:
@@ -265,28 +267,25 @@ class RadarVisualizer:
         plt.grid(True)
         plt.show()
 
-    # def plotClutterVelocities(self, clutterVelocities):
-    #     vcArray = np.array(clutterVelocities)
-        
-    #     plt.figure()
-
-    #     plt.plot(vcArray[:,0], vcArray[:,1])
-    #     plt.title("Clutter Velocities - V_C")
-    #     plt.grid()
-    #     plt.show()
-
     # TODO: change all plot functions to this new style
-    # TODO: check why the Plots no longer rescale in X
     def plotClutterVelocities(self, clutterVelocities, newWin):
         
         vcArray = np.array(clutterVelocities)
         
-        figure = plt.Figure()
+        figure = Figure(figsize=(5, 4), dpi=100)
         ax = figure.add_subplot(111)
         ax.plot(vcArray[:,0], vcArray[:,1])
+
         canvas = FigureCanvasTkAgg(figure, newWin)
-        canvas.get_tk_widget().pack(side=tk.LEFT, fill=tk.BOTH)
+        canvas.draw()
+        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+        toolbar = NavigationToolbar2Tk(canvas, newWin)
+        toolbar.update()
+        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
         ax.set_title("Clutter Velocities - V_C")
+        ax.grid()
 
         
 

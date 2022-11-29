@@ -1,5 +1,5 @@
 {
-    "ScanCenter": [0,1],
+    "ScanCenter": [0,-0.5],
     "ScanHalfWidth": 60,
     "ScanBars": 2,
     "FrequencyAgility": "None"

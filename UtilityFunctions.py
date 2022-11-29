@@ -107,7 +107,8 @@ def projectVectorOnPlane(vector, normal):
     projectionOnPlane = [vector[0]-projectionOnNormal[0], vector[1]-projectionOnNormal[1], vector[2]-projectionOnNormal[2]]
     return projectionOnPlane
 
-def calculateAzMonopuls(targetSightline, antennaSightline):
+def calculateAzMonopulse(targetSightline, antennaSightline):
+    # targetSightline, antennaSightline --> NED
     normalVector = [0,0,-1000] # NED
     targetOnPlane = projectVectorOnPlane(targetSightline, normalVector)
     targetOnPlaneNorm = normalizeVector(targetOnPlane)
@@ -132,7 +133,33 @@ def calculateAzMonopuls(targetSightline, antennaSightline):
     
     return azMonopuls
 
+def calculateElMonopulse(targetSightline, antennaSightline):
+    # First contruct a vertical Plane and get its normal vector. For that a second plane vector is needed...
+    antennaPlaneVector2 = [antennaSightline[0], antennaSightline[1], antennaSightline[2] + 10000]
+    normalVector = getNormalOfPlane(antennaSightline, antennaPlaneVector2)
+
+    # Project Antenna Sightline as well as Target Sightline on the new Plane
+    targetOnPlane = projectVectorOnPlane(targetSightline, normalVector)
+    targetOnPlaneNorm = normalizeVector(targetOnPlane)
+    antennaOnPlane = projectVectorOnPlane(antennaSightline, normalVector)
+    antennaOnPlaneNorm = normalizeVector(antennaOnPlane)
+    elMonopulse = angleBetweenVectors(targetOnPlane, antennaOnPlane)
+
+    if targetOnPlaneNorm[2] > antennaOnPlaneNorm[2]:
+        elMonopulse = elMonopulse * -1
+
+    return elMonopulse
+
+def getNormalOfPlane(vec1, vec2):
+    c1 = vec1[1] * vec2[2] - vec1[2] * vec2[1]
+    c2 = vec1[2] * vec2[0] - vec1[0] * vec2[2]
+    c3 = vec1[0] * vec2[1] - vec1[1] * vec2[0]
+    return[c1, c2, c3]
+
 def normalizeVector(vector):
     length = sqrt(vector[0]**2 + vector[1]**2 + vector[2]**2)
     normVec = [vector[0]/length, vector[1]/length, vector[2]/length]
     return normVec
+
+if __name__ == "__main__":
+    print(getNormalOfPlane([5,5,0], [0,1,0]))
