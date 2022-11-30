@@ -53,7 +53,15 @@ class SignalProcessor:
         self.MBCHalfWidthInBins = data["MBCHalfWidthInBins"]
 
     def processBurst(self, echoes, prf, frequency, velocity, azimuth, elevation):
-        
+    # Measure a single Burst and report Range, Range Rate and Monopuls values
+    # echoes:       A LIST of all echoes from that burst [[R, RR, AzMP, ElMp], [], ...] --> Note that R and RR are ambiguous
+    # prf:          An INT pointing into the PRF List from Radar.JSON
+    # frequency:    Hz
+    # velocity:     Ownship Velocity
+    # azimuth:      Antenna Angle in Reference to Boresight
+    # elevation:    Antenna Angle 
+
+
         burstAlarmList = []
         filteredEchoesList = []
         internalEchoesList = echoes
@@ -83,6 +91,9 @@ class SignalProcessor:
                 print("Unknown Type of MBC Filtering selected.")
 
         # Range and Doppler Unfold
+        # This translates the "Echo" to an "Alarm"
+        # Echo:     [R, RR, AzMP, ElMp]
+        # Alarm:    [[R1, R2, ...], [RR1, RR2, ...], AzMP, ElMp]
         if len(internalEchoesList) > 0:
             
             for echo in internalEchoesList:
@@ -123,19 +134,21 @@ class SignalProcessor:
                 # TODO: Is this the point to append the MP's? 
                 burstAlarmList.append([])
                 burstAlarmList[-1].append(rangeGateCandidates)
-                burstAlarmList[-1].append(velBinCandidates)                
+                burstAlarmList[-1].append(velBinCandidates) 
+                burstAlarmList[-1].append(echo[2]) # Az Monopulse
+                burstAlarmList[-1].append(echo[3]) # El Monopulse
                 
-        
         # Construct RESI Alarm List, contains the last N Burst Alarm Lists
+        # Alarm:                [[R1, R2, ...], [RR1, RR2, ...], AzMP, ElMp]
+        # Burst Alarm List:     A List of ALarms
+        # RESI Alarm List:      A List of Lists of Alarms
         self.resiAlarmLists.append(burstAlarmList)
         if len(self.resiAlarmLists) > self.n:
             self.resiAlarmLists.pop(0)
 
         # M/N Processing
-        
         potentialBurstDetectionList = []
         
-
         if len(self.resiAlarmLists) == self.n:
             for alarm in self.resiAlarmLists[-1]: # Alarms from last Burst
                 
@@ -176,7 +189,7 @@ class SignalProcessor:
                                     break
                         
                         # Prepare Output Detection List
-                        potentialBurstDetectionList.append([alarm[0][i], potentialDopplerBin])
+                        potentialBurstDetectionList.append([alarm[0][i], potentialDopplerBin, alarm[2], alarm[3]])
 
             
             # Remove Detections already reported within resolution interval

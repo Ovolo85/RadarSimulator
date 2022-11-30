@@ -77,14 +77,14 @@ class Radar:
         for echo in rangeEclipsedEcholistFromMeasurement:
             self.rangeEclipsedEchoes.append([time, prf, echo[0], echo[1], echo[2], echo[3]])
     
-    def appendToDetectionList(self, time, detectionsFromBurst):
-        for detectionR_RR in detectionsFromBurst:
-            detectionRange = detectionR_RR[0] * self.rangeGateSize + self.rangeGateSize/2
-            if not detectionR_RR[1] == None:
-                detectionRangeRate = (detectionR_RR[1] - self.lowestPositiveDopplerBin) * self.dopplerBinSize + self.dopplerBinSize/2
+    def appendToDetectionList(self, time, detectionsFromBurst, antennaAz, antennaEl):
+        for detection in detectionsFromBurst:
+            detectionRange = detection[0] * self.rangeGateSize + self.rangeGateSize/2
+            if not detection[1] == None:
+                detectionRangeRate = (detection[1] - self.lowestPositiveDopplerBin) * self.dopplerBinSize + self.dopplerBinSize/2
             else:
                 detectionRangeRate = None
-            self.detectionReports.append([time, detectionRange, detectionRangeRate])
+            self.detectionReports.append([time, detectionRange, detectionRangeRate, antennaAz + detection[2], antennaEl + detection[3]])
 
     def operate(self, runtime):
         time = 0.0
@@ -112,7 +112,7 @@ class Radar:
                 if len(detectionList) > 0:
                     if not self.barsWithDetections.__contains__(currentBar):
                         self.barsWithDetections.append([currentBar])
-                self.appendToDetectionList(time, detectionList)
+                self.appendToDetectionList(time, detectionList, az, el)
                 self.clutterVelocities.append([time, clutterVelocity])
                 self.appendToFilteredEchoList(time, usedPRF, filteredEchoesList)
 
@@ -138,7 +138,7 @@ class Radar:
         "RangeEchlipsedEchoesHeader":["time", "PRF", "Range", "RangeRate", "Monopuls Az", "Monopuls El"], "RangeEclipsedEchoes":self.rangeEclipsedEchoes,
         "BarTimesHeader": ["BarNumber", "StartTime", "EndTime"], "BarTimes":self.barTimes, 
         "BarsWithDetectionsHeader": ["BarNumber"], "BarsWithDetections":self.barsWithDetections, 
-        "DetectionReportsHeader": ["time", "Range", "RangeRate"], "DetectionReports": self.detectionReports,
+        "DetectionReportsHeader": ["time", "Range", "RangeRate", "Azimuth", "Elevation"], "DetectionReports": self.detectionReports,
         "FilteredEchoesHeader": ["time", "PRF", "Range", "RangeRate", "Monopuls Az", "Monopulse El"], "FilteredEchoes": self.filteredEchoes,
         "ClutterVelocitiesHeader": ["time", "ClutterVelocity"], "ClutterVelocities": self.clutterVelocities}
 
