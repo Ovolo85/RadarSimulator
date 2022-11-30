@@ -1,6 +1,6 @@
 import json
 import matplotlib.pyplot as plt
-from numpy import array
+from numpy import array, mod
 
 from RadarSubSys.Receiver import Receiver
 from RadarSubSys.Scanner import Scanner
@@ -33,6 +33,7 @@ class Radar:
         self.barTimes = []
         self.barsWithDetections = []
         self.detectionReports = []
+        self.ownshipNEDatDetectionReport = []
         self.filteredEchoes = []
         self.clutterVelocities = []
         self.highestOpeningVelocity = self.highestClosingVelocity - (self.numberOfDopplerBins * self.dopplerBinSize)
@@ -77,14 +78,16 @@ class Radar:
         for echo in rangeEclipsedEcholistFromMeasurement:
             self.rangeEclipsedEchoes.append([time, prf, echo[0], echo[1], echo[2], echo[3]])
     
-    def appendToDetectionList(self, time, detectionsFromBurst, antennaAz, antennaEl):
+    def appendToDetectionList(self, time, detectionsFromBurst, antennaAz, antennaEl, heading, ownshipNED):
         for detection in detectionsFromBurst:
             detectionRange = detection[0] * self.rangeGateSize + self.rangeGateSize/2
             if not detection[1] == None:
                 detectionRangeRate = (detection[1] - self.lowestPositiveDopplerBin) * self.dopplerBinSize + self.dopplerBinSize/2
             else:
                 detectionRangeRate = None
-            self.detectionReports.append([time, detectionRange, detectionRangeRate, antennaAz + detection[2], antennaEl + detection[3]])
+            geoAz = mod(heading + antennaAz + detection[2], 360)
+            self.detectionReports.append([time, detectionRange, detectionRangeRate, geoAz, antennaEl + detection[3]])
+            self.ownshipNEDatDetectionReport.append([time, ownshipNED[0], ownshipNED[1], ownshipNED[2]])
 
     def operate(self, runtime):
         time = 0.0
@@ -99,6 +102,7 @@ class Radar:
             if not nextTurnAround:
                 
                 # Scanner Movement
+                # Az and El are centered around A/C boresight
                 az, el, bar = self.scanner.moveScanner(self.burstLength)
                 
                 # Receiver
@@ -112,7 +116,7 @@ class Radar:
                 if len(detectionList) > 0:
                     if not self.barsWithDetections.__contains__(currentBar):
                         self.barsWithDetections.append([currentBar])
-                self.appendToDetectionList(time, detectionList, az, el)
+                self.appendToDetectionList(time, detectionList, az, el, self.rfEnvironment.getOwnshipHeading(time), self.rfEnvironment.getOwnshipNED(time))
                 self.clutterVelocities.append([time, clutterVelocity])
                 self.appendToFilteredEchoList(time, usedPRF, filteredEchoesList)
 
@@ -138,7 +142,8 @@ class Radar:
         "RangeEchlipsedEchoesHeader":["time", "PRF", "Range", "RangeRate", "Monopuls Az", "Monopuls El"], "RangeEclipsedEchoes":self.rangeEclipsedEchoes,
         "BarTimesHeader": ["BarNumber", "StartTime", "EndTime"], "BarTimes":self.barTimes, 
         "BarsWithDetectionsHeader": ["BarNumber"], "BarsWithDetections":self.barsWithDetections, 
-        "DetectionReportsHeader": ["time", "Range", "RangeRate", "Azimuth", "Elevation"], "DetectionReports": self.detectionReports,
+        "DetectionReportsHeader": ["time", "Range", "RangeRate", "Bearing", "Elevation"], "DetectionReports": self.detectionReports,
+        "OwnshipNEDatDetectionHeader": ["time", "North", "East", "Down"], "OwnshipNEDatDetection":self.ownshipNEDatDetectionReport,
         "FilteredEchoesHeader": ["time", "PRF", "Range", "RangeRate", "Monopuls Az", "Monopulse El"], "FilteredEchoes": self.filteredEchoes,
         "ClutterVelocitiesHeader": ["time", "ClutterVelocity"], "ClutterVelocities": self.clutterVelocities}
 

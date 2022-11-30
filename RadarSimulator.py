@@ -81,9 +81,12 @@ class RadarSimulator:
         self.btnDrawDetectionRanges.grid(row = 4, column = 1)
         self.btnDrawDetectionRanges.bind("<Button-1>", self.drawDetectionRanges)
 
-        self.btnDrawDetectionRangeRates = tk.Button(master = frmCol2, text="Draw Det. Report Range Rates", width=20, state="disabled")
+        # TODO: Rework all Bindings to Commands!
+        self.btnDrawDetectionRangeRates = tk.Button(master = frmCol2, text="Draw Det. Report Range Rates", width=20, state="disabled", command=self.drawDetectionRangeRates)
         self.btnDrawDetectionRangeRates.grid(row = 5, column = 1)
-        self.btnDrawDetectionRangeRates.bind("<Button-1>", self.drawDetectionRangeRates)
+
+        self.btnDrawDetectionNE = tk.Button(master=frmCol2, text="Draw Det. Report North East", width=20, state="disabled", command=self.drawDetectionNorthEast)
+        self.btnDrawDetectionNE.grid(row=6, column = 1)
 
         frmCol2.grid(row=1, column=2, sticky="N")
 
@@ -172,6 +175,7 @@ class RadarSimulator:
             self.btnDrawEchoRanges["state"] = "normal"
             self.btnDrawDetectionRanges["state"] = "normal"
             self.btnDrawDetectionRangeRates["state"] = "normal"
+            self.btnDrawDetectionNE["state"] = "normal"
             self.btnDrawClutterVelocities["state"] = "normal"
 
             self.btnStartRadarSimulation["state"] = "disabled"
@@ -201,9 +205,14 @@ class RadarSimulator:
         if self.btnDrawEchoRanges["state"] != "disabled":
             self.visualizer.plotAllTargetRangesAndDetectionReports(self.scenario, self.simResult["DetectionReports"])
 
-    def drawDetectionRangeRates(self, event):
+    def drawDetectionRangeRates(self):
         if self.btnDrawDetectionRangeRates["state"] != "disabled":
             self.visualizer.plotAllTargetRangeRatesAndDetectionReports(self.scenario, self.simResult["DetectionReports"])
+
+    def drawDetectionNorthEast(self):
+        if self.btnDrawDetectionNE["state"] != "disabled":
+            newWin = tk.Toplevel(self.window)
+            self.visualizer.plotTargetScenarioTopDownAndDetectionReports(self.scenario, self.simResult["DetectionReports"], self.simResult["OwnshipNEDatDetection"], newWin)
 
     def drawSingleTgtRange(self, event):
         if self.btnDrawSingleTgtRange["state"] != "disabled":
@@ -217,9 +226,8 @@ class RadarSimulator:
         if self.btnDrawClutterVelocities["state"] != "disabled":
             newWin = tk.Toplevel(self.window)
             self.visualizer.plotClutterVelocities(self.simResult["ClutterVelocities"], newWin)
-            #self.windowHandlerList.append(newWin)
 
-    # Utility
+    # Text Outputs
     def provideSimulationStatusText(self, simtime):
         
         self.statusText.insert(tk.END, "Simulation duration: " + str(simtime) + " s\n")

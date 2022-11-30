@@ -79,6 +79,41 @@ class RadarVisualizer:
 
         plt.show()
 
+    def plotTargetScenarioTopDownAndDetectionReports(self, scenario, detectionReports, ownshipNEDatDetection, newWin):
+        
+        figure = Figure(figsize=(5, 4), dpi=100)
+        ax = figure.add_subplot(111)
+        
+        for i, target in enumerate(scenario[1:]):
+            arrayToPlot = np.array(target)
+            ax.plot(arrayToPlot[:,2], arrayToPlot[:,1], label="Target " + str(i+1))
+            
+
+        detectionsNE = []
+        for i, detection in enumerate(detectionReports):
+            rangeInPlane = np.cos(deg2rad(detection[4])) * detection[1]
+            north = np.cos(deg2rad(detection[3])) * rangeInPlane
+            north = north + ownshipNEDatDetection[i][1]
+            east = np.sin(deg2rad(detection[3])) * rangeInPlane
+            east = east + ownshipNEDatDetection[i][2]
+            detectionsNE.append([north, east])
+
+        arrayToPlot = np.array(detectionsNE)
+        ax.plot(arrayToPlot[:,1], arrayToPlot[:,0], "ro", label="Detections")
+
+        ax.legend(loc="upper right")
+
+        canvas = FigureCanvasTkAgg(figure, newWin)
+        canvas.draw()
+        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+        toolbar = NavigationToolbar2Tk(canvas, newWin)
+        toolbar.update()
+        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+        ax.set_title("Detection Reports - North/East")
+        ax.grid()
+
     def plotAllTargetRanges(self, scenario):
         plt.figure()
         
