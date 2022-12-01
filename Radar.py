@@ -79,6 +79,7 @@ class Radar:
             self.rangeEclipsedEchoes.append([time, prf, echo[0], echo[1], echo[2], echo[3]])
     
     def appendToDetectionList(self, time, detectionsFromBurst, antennaAz, antennaEl, heading, ownshipNED):
+    # Additionally to the Detection Reports the OS Positions at the time are needed to calculate the NED Position of the detection. 
         for detection in detectionsFromBurst:
             detectionRange = detection[0] * self.rangeGateSize + self.rangeGateSize/2
             if not detection[1] == None:

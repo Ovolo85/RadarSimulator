@@ -19,8 +19,10 @@ class RadarVisualizer:
     def getRadarDataFromJSON(self, radarDataFile):
         with open(radarDataFile) as json_file:
             data = json.load(json_file)
+        
         self.prfs = data["PRFs"]
         self.burstLength = data["BurstLength"]
+        self.n = data["N"]
         self.pw = data["PulseWidth"]
 
         self.DopplerBinSize = data["DopplerBinSize"]
@@ -157,7 +159,7 @@ class RadarVisualizer:
 
     def plotAllTargetRangeRatesAndDetectionReports(self, scenario, detectionReports):
         plt.figure()
-
+        # TODO: This only plots one RR Truth Data, seemingly for the last Tgt
         for target in range(1, len(scenario)):
             targetStartTime = scenario[target][0][0]
             ownshipRowOffset = round(targetStartTime / self.burstLength)
@@ -322,6 +324,48 @@ class RadarVisualizer:
         ax.set_title("Clutter Velocities - V_C")
         ax.grid()
 
+    def plotAmbiguousRangeDopplerMatrixOfDetection(self, simResult, detNo, newWin):
+        
+        resiEchoes = []
+        echoRow = 0
+
+        detReportTime = simResult["DetectionReports"][detNo-1][0]
+        for idx, echo in enumerate(simResult["Echoes"]):
+            if echo[0] == detReportTime:
+                echoRow = idx
+                resiEchoes.append(echo)
+
+        beginOfResiFound = False
+        while not beginOfResiFound:
+            echoRow -= 1
+            if echoRow >= 0: 
+                if detReportTime - simResult["Echoes"][echoRow][0] < ((self.n - 1) * self.burstLength + self.burstLength / 10):
+                    resiEchoes.append(simResult["Echoes"][echoRow])
+                else:
+                    break
+            else:
+                break
+                
+        figure = Figure(figsize=(5, 4), dpi=100)
+        ax = figure.add_subplot(111)
+        
+        symbol = 0
+        for echo in resiEchoes:
+            ax.plot(echo[2], echo[3], self.symboltable[symbol], label=self.prfs[echo[1]])
+            symbol += 1
+
+        ax.legend(loc="upper right")
+
+        canvas = FigureCanvasTkAgg(figure, newWin)
+        canvas.draw()
+        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+        toolbar = NavigationToolbar2Tk(canvas, newWin)
+        toolbar.update()
+        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+        ax.set_title("Ambiguous R/D Matrix of Alarms of Detection " + str(detNo))
+        ax.grid()
         
 
         

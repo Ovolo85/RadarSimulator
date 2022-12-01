@@ -103,6 +103,19 @@ class RadarSimulator:
         self.btnDrawSingleTgtRange.grid(row = 2, column = 1, columnspan = 2)
         self.btnDrawSingleTgtRange.bind("<Button-1>", self.drawSingleTgtRange)
 
+        lblDetectionSelect = tk.Label(master=frmCol3, text="Detection select:")
+        lblDetectionSelect.grid(row = 3, column = 1)
+
+        self.entDetectionSelect = tk.Entry(master = frmCol3, width=5)
+        self.entDetectionSelect.insert(0, "1")
+        self.entDetectionSelect.grid(row = 3, column = 2)
+
+        self.btnDrawAmbR_D_Mat = tk.Button(master=frmCol3, text="Draw Amb. R/D Mat.", width=20, state="disabled", command=self.drawAmbRDMat)
+        self.btnDrawAmbR_D_Mat.grid(row = 4, column = 1, columnspan = 2)
+
+        self.btnDrawUnambR_D_Mat = tk.Button(master=frmCol3, text="Draw Unamb. R/D Mat.", width=20, state="disabled")
+        self.btnDrawUnambR_D_Mat.grid(row = 5, column = 1, columnspan = 2)
+
         frmCol3.grid(row = 1, column = 3, sticky = "N")
 
         frmCol4 = tk.Frame(pady = 10, padx = 10)
@@ -177,6 +190,7 @@ class RadarSimulator:
             self.btnDrawDetectionRangeRates["state"] = "normal"
             self.btnDrawDetectionNE["state"] = "normal"
             self.btnDrawClutterVelocities["state"] = "normal"
+            self.btnDrawAmbR_D_Mat["state"] = "normal"
 
             self.btnStartRadarSimulation["state"] = "disabled"
 
@@ -214,6 +228,11 @@ class RadarSimulator:
             newWin = tk.Toplevel(self.window)
             self.visualizer.plotTargetScenarioTopDownAndDetectionReports(self.scenario, self.simResult["DetectionReports"], self.simResult["OwnshipNEDatDetection"], newWin)
 
+    def drawAmbRDMat(self):
+        if self.btnDrawAmbR_D_Mat["state"] != "disabled":
+            newWin = tk.Toplevel(self.window)
+            self.visualizer.plotAmbiguousRangeDopplerMatrixOfDetection(self.simResult, int(self.entDetectionSelect.get()), newWin)
+
     def drawSingleTgtRange(self, event):
         if self.btnDrawSingleTgtRange["state"] != "disabled":
             self.visualizer.plotSingleTargetRange(self.scenario, int(self.entTargetSelect.get()))
@@ -231,7 +250,8 @@ class RadarSimulator:
     def provideSimulationStatusText(self, simtime):
         
         self.statusText.insert(tk.END, "Simulation duration: " + str(simtime) + " s\n")
-        self.statusText.insert(tk.END, "Scan Bars with Detections: " + str(self.simResult["BarsWithDetections"]))
+        self.statusText.insert(tk.END, "Scan Bars with Detections: " + str(self.simResult["BarsWithDetections"]) + "\n")
+        self.statusText.insert(tk.END, "Detections: 1.." + str(len(self.simResult["DetectionReports"])) + "\n")
 
     def provideScenarioStatusText(self):
         osStart = self.scenario[0][0][0]
