@@ -52,9 +52,8 @@ class RfEnvironment:
             # TODO: Find a better technique to replace the Overlap...
             if offBoresightAngle < (self.beamWidth+self.beamOverlap) / 2:
                 
-                # TODO: calculate Monopuls, check Monopuls calculation
-
-                azMonopuls = calculateAzMonopuls(toTargetVector, antennaPointingVector)
+                azMonopulse = calculateAzMonopulse(toTargetVector, antennaPointingVector)
+                elMonopulse = calculateElMonopulse(toTargetVector, antennaPointingVector)
 
                 # TODO: Introduce MBC Returns               
 
@@ -68,7 +67,9 @@ class RfEnvironment:
                     if self.measurementNoise:
                         measuredRange = measuredRange + np.random.normal(0.0, self.rangeStandardDeviation)
                         measuredRangeRate = measuredRangeRate + np.random.normal(0.0, self.velocityStandardDeviation)
-                    
+                        azMonopulse = azMonopulse + np.random.normal(0.0, self.monopulseStandardDeviation)
+                        elMonopulse = elMonopulse + np.random.normal(0.0, self.monopulseStandardDeviation)
+
                     # Get Ambiguous Values by MUR and MUV
                     measuredRange = mod(measuredRange, calculateMUR(prf))
                     measuredRangeRate = mod(measuredRangeRate, calculateMUV(prf, frq))
@@ -76,17 +77,25 @@ class RfEnvironment:
                     # Filter for eclipsing
                     if self.eclipsingEnabled:
                         if measuredRange > calculateEclipsingZoneSize(pw):
-                            burstEchoes.append([measuredRange, measuredRangeRate, azMonopuls, 0.0])
+                            burstEchoes.append([measuredRange, measuredRangeRate, azMonopulse, elMonopulse])
                         else:
-                            rangeEclipsedEchoes.append([measuredRange, measuredRangeRate, azMonopuls, 0.0])
+                            rangeEclipsedEchoes.append([measuredRange, measuredRangeRate, azMonopulse, elMonopulse])
                     else:
-                        burstEchoes.append([measuredRange, measuredRangeRate, azMonopuls, 0.0])
+                        burstEchoes.append([measuredRange, measuredRangeRate, azMonopulse, elMonopulse])
         return burstEchoes, rangeEclipsedEchoes
         
     # TODO: Maybe this would better be located in a "Ownship" Simulation? Instead of RF Environment...
     def getOwnshipSpeed(self, time):
         timeStep = round(time / self.burstLength)
         return self.scenario[0][timeStep][5]
+
+    def getOwnshipHeading(self, time):
+        timeStep = round(time / self.burstLength)
+        return self.scenario[0][timeStep][4]
+
+    def getOwnshipNED(self, time):
+        timeStep = round(time / self.burstLength)
+        return [self.scenario[0][timeStep][1], self.scenario[0][timeStep][2], self.scenario[0][timeStep][3]]
 
     def getSimulationSettingFromJSON(self, simulationSettingFile):
         with open(simulationSettingFile) as json_file:
@@ -103,3 +112,4 @@ class RfEnvironment:
         self.beamWidth = data["BeamWidth"]
         self.rangeStandardDeviation = data["RangeStandardDeviation"]
         self.velocityStandardDeviation = data["VelocityStandardDeviation"]
+        self.monopulseStandardDeviation = data["MonopulseStandardDeviation"]

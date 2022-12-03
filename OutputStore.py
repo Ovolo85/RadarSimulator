@@ -3,7 +3,7 @@ import csv
 class OutputStore:
 
     def __init__(self) -> None:
-        self.path = "output/"
+        self.path = "Output/"
         
     def writeSimResultToDisk(self, simResult):
         keyList = list(simResult)

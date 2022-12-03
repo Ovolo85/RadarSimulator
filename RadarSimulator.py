@@ -1,12 +1,14 @@
-from threading import Thread
+
 from OutputStore import OutputStore
 from RadarVisualizer import RadarVisualizer
 from RfEnvironment import RfEnvironment
 from ScenarioProcessor import ScenarioProcessor
 from Radar import Radar
+from RadarReplay import RadarReplay
 import tkinter as tk
 import time
 
+# TODO: Tidy Up the directory
 
 class RadarSimulator:
     
@@ -14,11 +16,14 @@ class RadarSimulator:
         self.scenarioProcessor = ScenarioProcessor()
         self.outputStore = OutputStore()
         
+        self.windowHandlerList = []
+
         self.startGUI()
 
     def startGUI(self):
 
-        window = tk.Tk()
+        self.window = tk.Tk()
+        self.window.wm_title("Radar Tracker Testbed")
 
         frmCol1 = tk.Frame(pady=10, padx=10)
 
@@ -78,9 +83,12 @@ class RadarSimulator:
         self.btnDrawDetectionRanges.grid(row = 4, column = 1)
         self.btnDrawDetectionRanges.bind("<Button-1>", self.drawDetectionRanges)
 
-        self.btnDrawDetectionRangeRates = tk.Button(master = frmCol2, text="Draw Det. Report Range Rates", width=20, state="disabled")
+        # TODO: Rework all Bindings to Commands!
+        self.btnDrawDetectionRangeRates = tk.Button(master = frmCol2, text="Draw Det. Report Range Rates", width=20, state="disabled", command=self.drawDetectionRangeRates)
         self.btnDrawDetectionRangeRates.grid(row = 5, column = 1)
-        self.btnDrawDetectionRangeRates.bind("<Button-1>", self.drawDetectionRangeRates)
+
+        self.btnDrawDetectionNE = tk.Button(master=frmCol2, text="Draw Det. Report North East", width=20, state="disabled", command=self.drawDetectionNorthEast)
+        self.btnDrawDetectionNE.grid(row=6, column = 1)
 
         frmCol2.grid(row=1, column=2, sticky="N")
 
@@ -96,6 +104,19 @@ class RadarSimulator:
         self.btnDrawSingleTgtRange = tk.Button(master=frmCol3, text="Draw Single Target Range", width=20, state="disabled")
         self.btnDrawSingleTgtRange.grid(row = 2, column = 1, columnspan = 2)
         self.btnDrawSingleTgtRange.bind("<Button-1>", self.drawSingleTgtRange)
+
+        lblDetectionSelect = tk.Label(master=frmCol3, text="Detection select:")
+        lblDetectionSelect.grid(row = 3, column = 1)
+
+        self.entDetectionSelect = tk.Entry(master = frmCol3, width=5)
+        self.entDetectionSelect.insert(0, "1")
+        self.entDetectionSelect.grid(row = 3, column = 2)
+
+        self.btnDrawAmbR_D_Mat = tk.Button(master=frmCol3, text="Draw Amb. R/D Mat.", width=20, state="disabled", command=self.drawAmbRDMat)
+        self.btnDrawAmbR_D_Mat.grid(row = 4, column = 1, columnspan = 2)
+
+        self.btnDrawRangeUnfoldR_D_Mat = tk.Button(master=frmCol3, text="Draw Range Unfold R/D Mat.", width=20, state="disabled", command=self.drawRangeUnfoldRDMat)
+        self.btnDrawRangeUnfoldR_D_Mat.grid(row = 5, column = 1, columnspan = 2)
 
         frmCol3.grid(row = 1, column = 3, sticky = "N")
 
@@ -117,12 +138,19 @@ class RadarSimulator:
         frmColB3 = tk.Frame(pady = 10, padx = 10)
 
         self.btnDrawEclipsingRanges = tk.Button(master = frmColB3, text="Draw Eclipsing Ranges", width=20, state="disabled")
-        self.btnDrawEclipsingRanges.grid(row = 5, column = 1)
+        self.btnDrawEclipsingRanges.grid(row = 1, column = 1)
         self.btnDrawEclipsingRanges.bind("<Button-1>", self.drawRangeEclipsingZones)
 
         frmColB3.grid(row = 2, column = 3, sticky = "N")
 
-        window.mainloop()
+        frmColB4 = tk.Frame(pady=10, padx=10)
+
+        self.btnStartReplay = tk.Button(master = frmColB4, text="Start Replay", width=20, state="disabled", command=self.startReplay)
+        self.btnStartReplay.grid(row = 1, column = 1)
+
+        frmColB4.grid(row = 2, column = 4, sticky = "N")
+
+        self.window.mainloop()
 
     # Button Methods
 
@@ -169,7 +197,11 @@ class RadarSimulator:
             self.btnDrawEchoRanges["state"] = "normal"
             self.btnDrawDetectionRanges["state"] = "normal"
             self.btnDrawDetectionRangeRates["state"] = "normal"
+            self.btnDrawDetectionNE["state"] = "normal"
             self.btnDrawClutterVelocities["state"] = "normal"
+            self.btnDrawAmbR_D_Mat["state"] = "normal"
+            self.btnDrawRangeUnfoldR_D_Mat["state"] = "normal"
+            self.btnStartReplay["state"] = "normal"
 
             self.btnStartRadarSimulation["state"] = "disabled"
 
@@ -184,10 +216,11 @@ class RadarSimulator:
     def drawAntennaMovement(self, event):
         
         if self.btnDrawAntennaMovement["state"] != "disabled":
-            thread = Thread(target=self.visualizer.plotAntennaMovement, args=[self.simResult["AntennaAngles"]])
-            thread.start()
+            self.window.update()
+            #thread = Thread(target=self.visualizer.plotAntennaMovement, args=[self.simResult["AntennaAngles"]])
+            #thread.start()
 
-            #self.visualizer.plotAntennaMovement(self.simResult["AntennaAngles"])
+            self.visualizer.plotAntennaMovement(self.simResult["AntennaAngles"])
 
     def drawEchoRanges(self, event):
         if self.btnDrawEchoRanges["state"] != "disabled":
@@ -197,9 +230,24 @@ class RadarSimulator:
         if self.btnDrawEchoRanges["state"] != "disabled":
             self.visualizer.plotAllTargetRangesAndDetectionReports(self.scenario, self.simResult["DetectionReports"])
 
-    def drawDetectionRangeRates(self, event):
+    def drawDetectionRangeRates(self):
         if self.btnDrawDetectionRangeRates["state"] != "disabled":
             self.visualizer.plotAllTargetRangeRatesAndDetectionReports(self.scenario, self.simResult["DetectionReports"])
+
+    def drawDetectionNorthEast(self):
+        if self.btnDrawDetectionNE["state"] != "disabled":
+            newWin = tk.Toplevel(self.window)
+            self.visualizer.plotTargetScenarioTopDownAndDetectionReports(self.scenario, self.simResult["DetectionReports"], self.simResult["OwnshipNEDatDetection"], newWin)
+
+    def drawAmbRDMat(self):
+        if self.btnDrawAmbR_D_Mat["state"] != "disabled":
+            newWin = tk.Toplevel(self.window)
+            self.visualizer.plotAmbiguousRangeDopplerMatrixOfDetection(self.simResult, int(self.entDetectionSelect.get()), newWin)
+
+    def drawRangeUnfoldRDMat(self):
+        if self.btnDrawRangeUnfoldR_D_Mat["state"] != "disabled":
+            newWin = tk.Toplevel(self.window)
+            self.visualizer.plotRangeUnfoldOfEchoesOfDetection(self.simResult, int(self.entDetectionSelect.get()), newWin)
 
     def drawSingleTgtRange(self, event):
         if self.btnDrawSingleTgtRange["state"] != "disabled":
@@ -211,13 +259,19 @@ class RadarSimulator:
 
     def drawClutterVelocities(self, event):
         if self.btnDrawClutterVelocities["state"] != "disabled":
-            self.visualizer.plotClutterVelocities(self.simResult["ClutterVelocities"])
+            newWin = tk.Toplevel(self.window)
+            self.visualizer.plotClutterVelocities(self.simResult["ClutterVelocities"], newWin)
 
-    # Utility
+    def startReplay(self):
+        if self.btnStartReplay["state"] != "disabled":
+            replay = RadarReplay("replay.json")
+
+    # Text Outputs
     def provideSimulationStatusText(self, simtime):
         
         self.statusText.insert(tk.END, "Simulation duration: " + str(simtime) + " s\n")
-        self.statusText.insert(tk.END, "Scan Bars with Detections: " + str(self.simResult["BarsWithDetections"]))
+        self.statusText.insert(tk.END, "Scan Bars with Detections: " + str(self.simResult["BarsWithDetections"]) + "\n")
+        self.statusText.insert(tk.END, "Detections: 1.." + str(len(self.simResult["DetectionReports"])) + "\n")
 
     def provideScenarioStatusText(self):
         osStart = self.scenario[0][0][0]

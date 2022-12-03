@@ -2,7 +2,7 @@
     "BurstLength": 0.005,
     
     "M": 4,
-    "N": 9,
+    "N": 8,
     
     "BeamWidth": 2,
     "ScanSpeed":50, 
@@ -14,6 +14,7 @@
     
     "RangeStandardDeviation": 20.0,
     "VelocityStandardDeviation": 1.0,
+    "MonopulseStandardDeviation":0.1,
     
     "RangeGateSize": 128, 
     "DopplerBinSize":5, 
