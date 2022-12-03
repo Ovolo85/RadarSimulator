@@ -2,7 +2,7 @@
     "BurstLength": 0.005,
     
     "M": 4,
-    "N": 9,
+    "N": 8,
     
     "BeamWidth": 2,
     "ScanSpeed":50, 

@@ -4,9 +4,11 @@ from RadarVisualizer import RadarVisualizer
 from RfEnvironment import RfEnvironment
 from ScenarioProcessor import ScenarioProcessor
 from Radar import Radar
+from RadarReplay import RadarReplay
 import tkinter as tk
 import time
 
+# TODO: Tidy Up the directory
 
 class RadarSimulator:
     
@@ -113,8 +115,8 @@ class RadarSimulator:
         self.btnDrawAmbR_D_Mat = tk.Button(master=frmCol3, text="Draw Amb. R/D Mat.", width=20, state="disabled", command=self.drawAmbRDMat)
         self.btnDrawAmbR_D_Mat.grid(row = 4, column = 1, columnspan = 2)
 
-        self.btnDrawUnambR_D_Mat = tk.Button(master=frmCol3, text="Draw Unamb. R/D Mat.", width=20, state="disabled")
-        self.btnDrawUnambR_D_Mat.grid(row = 5, column = 1, columnspan = 2)
+        self.btnDrawRangeUnfoldR_D_Mat = tk.Button(master=frmCol3, text="Draw Range Unfold R/D Mat.", width=20, state="disabled", command=self.drawRangeUnfoldRDMat)
+        self.btnDrawRangeUnfoldR_D_Mat.grid(row = 5, column = 1, columnspan = 2)
 
         frmCol3.grid(row = 1, column = 3, sticky = "N")
 
@@ -136,10 +138,17 @@ class RadarSimulator:
         frmColB3 = tk.Frame(pady = 10, padx = 10)
 
         self.btnDrawEclipsingRanges = tk.Button(master = frmColB3, text="Draw Eclipsing Ranges", width=20, state="disabled")
-        self.btnDrawEclipsingRanges.grid(row = 5, column = 1)
+        self.btnDrawEclipsingRanges.grid(row = 1, column = 1)
         self.btnDrawEclipsingRanges.bind("<Button-1>", self.drawRangeEclipsingZones)
 
         frmColB3.grid(row = 2, column = 3, sticky = "N")
+
+        frmColB4 = tk.Frame(pady=10, padx=10)
+
+        self.btnStartReplay = tk.Button(master = frmColB4, text="Start Replay", width=20, state="disabled", command=self.startReplay)
+        self.btnStartReplay.grid(row = 1, column = 1)
+
+        frmColB4.grid(row = 2, column = 4, sticky = "N")
 
         self.window.mainloop()
 
@@ -191,6 +200,8 @@ class RadarSimulator:
             self.btnDrawDetectionNE["state"] = "normal"
             self.btnDrawClutterVelocities["state"] = "normal"
             self.btnDrawAmbR_D_Mat["state"] = "normal"
+            self.btnDrawRangeUnfoldR_D_Mat["state"] = "normal"
+            self.btnStartReplay["state"] = "normal"
 
             self.btnStartRadarSimulation["state"] = "disabled"
 
@@ -233,6 +244,11 @@ class RadarSimulator:
             newWin = tk.Toplevel(self.window)
             self.visualizer.plotAmbiguousRangeDopplerMatrixOfDetection(self.simResult, int(self.entDetectionSelect.get()), newWin)
 
+    def drawRangeUnfoldRDMat(self):
+        if self.btnDrawRangeUnfoldR_D_Mat["state"] != "disabled":
+            newWin = tk.Toplevel(self.window)
+            self.visualizer.plotRangeUnfoldOfEchoesOfDetection(self.simResult, int(self.entDetectionSelect.get()), newWin)
+
     def drawSingleTgtRange(self, event):
         if self.btnDrawSingleTgtRange["state"] != "disabled":
             self.visualizer.plotSingleTargetRange(self.scenario, int(self.entTargetSelect.get()))
@@ -245,6 +261,10 @@ class RadarSimulator:
         if self.btnDrawClutterVelocities["state"] != "disabled":
             newWin = tk.Toplevel(self.window)
             self.visualizer.plotClutterVelocities(self.simResult["ClutterVelocities"], newWin)
+
+    def startReplay(self):
+        if self.btnStartReplay["state"] != "disabled":
+            replay = RadarReplay("replay.json")
 
     # Text Outputs
     def provideSimulationStatusText(self, simtime):

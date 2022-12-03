@@ -25,7 +25,11 @@ class RadarVisualizer:
         self.n = data["N"]
         self.pw = data["PulseWidth"]
 
-        self.DopplerBinSize = data["DopplerBinSize"]
+        self.dopplerBinSize = data["DopplerBinSize"]
+        self.rangeGateSize = data["RangeGateSize"]
+
+        self.numberOfDopplerBins = data["NumberOfDopplerBins"]
+        self.highestClosingVelocity = data["HighestClosingVelocity"]
 
         self.MBCNotchActive = data["MBCNotchActive"]
         self.MBCNotchType = data["MBCNotchType"]
@@ -189,8 +193,8 @@ class RadarVisualizer:
         rangeRatesToPlot = np.array(rangeRates)
         detectionReportRRsToPlot = np.array(detectionReports)
         clutterVelocitiesToPlot = np.array(clutterVelocitiesInSightline)
-        clutterVelocitiesToPlotMax = clutterVelocitiesToPlot[:,1] + self.MBCHalfWidthInBins * self.DopplerBinSize + self.DopplerBinSize/2
-        clutterVelocitiesToPlotMin = clutterVelocitiesToPlot[:,1] - self.MBCHalfWidthInBins * self.DopplerBinSize - self.DopplerBinSize/2
+        clutterVelocitiesToPlotMax = clutterVelocitiesToPlot[:,1] + self.MBCHalfWidthInBins * self.dopplerBinSize + self.dopplerBinSize/2
+        clutterVelocitiesToPlotMin = clutterVelocitiesToPlot[:,1] - self.MBCHalfWidthInBins * self.dopplerBinSize - self.dopplerBinSize/2
 
         plt.plot(rangeRatesToPlot[:,0], rangeRatesToPlot[:,1], label="True RR")
         plt.plot(detectionReportRRsToPlot[:,0], detectionReportRRsToPlot[:,2], "ro", label="Detection Report RR")
@@ -364,10 +368,73 @@ class RadarVisualizer:
         toolbar.update()
         canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
-        ax.set_title("Ambiguous R/D Matrix of Alarms of Detection " + str(detNo))
+        ax.set_title("Ambiguous R/D Matrix of Echoes of Detection " + str(detNo) + " (Including MBC Echoes)")
         ax.grid()
         
+    def plotRangeUnfoldOfEchoesOfDetection(self, simResult, detNo, newWin):
+        
+        resiAlarms = []
+        alarmRow = 0
+        detReportTime = simResult["DetectionReports"][detNo-1][0]
 
+        for idx, alarm in enumerate(simResult["AnalogueAlarms"]):
+            if alarm[0] == detReportTime:
+                alarmRow = idx
+                resiAlarms.append(alarm)
+        
+        beginOfResiFound = False
+        while not beginOfResiFound:
+            alarmRow -= 1
+            if alarmRow >= 0: 
+                if detReportTime - simResult["AnalogueAlarms"][alarmRow][0] < ((self.n - 1) * self.burstLength + self.burstLength / 10):
+                    resiAlarms.append(simResult["AnalogueAlarms"][alarmRow])
+                else:
+                    break
+            else:
+                break
+        
+        figure = Figure(figsize=(5, 4), dpi=100)
+        ax = figure.add_subplot(111)
+
+        symbol = 0
+        
+        for alarm in resiAlarms:
+            alarmRDMat = []
+            for rangeAlarm in alarm[2]:
+                for dopplerAlarm in alarm[3]:
+                    alarmRDMat.append([rangeAlarm, dopplerAlarm])
+            
+            arrayToPlot = np.array(alarmRDMat)
+
+            ax.plot(arrayToPlot[:,0], arrayToPlot[:,1], self.symboltable[symbol], label=self.prfs[alarm[1]])
+            symbol += 1
+
+        ax.legend(loc="upper right")
+        
+        # TODO: max Range shall not be hardcoded
+        rangeTicks = np.arange(0, self.maxRange, self.rangeGateSize * 100)
+        rangeGateTicks = np.arange(0, self.maxRange, self.rangeGateSize)
+
+        dopplerTicks = np.arange(self.highestClosingVelocity - self.dopplerBinSize*self.numberOfDopplerBins, self.highestClosingVelocity, self.dopplerBinSize * 50)
+        dopplerBinTicks = np.arange(self.highestClosingVelocity - self.dopplerBinSize*self.numberOfDopplerBins, self.highestClosingVelocity, self.dopplerBinSize)
+
+        ax.set_xticks(rangeTicks)
+        ax.set_xticks(rangeGateTicks, minor=True)
+        ax.set_yticks(dopplerTicks)
+        ax.set_yticks(dopplerBinTicks, minor=True)
+
+        ax.grid(which='minor', alpha=0.2)
+        ax.grid(which='major', alpha=0.5)
+
+        canvas = FigureCanvasTkAgg(figure, newWin)
+        canvas.draw()
+        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+        toolbar = NavigationToolbar2Tk(canvas, newWin)
+        toolbar.update()
+        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+        ax.set_title("Range/Doppler Unfold of Detection " + str(detNo))
         
 
 

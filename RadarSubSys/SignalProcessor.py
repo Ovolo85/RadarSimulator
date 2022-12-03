@@ -63,6 +63,7 @@ class SignalProcessor:
 
 
         burstAlarmList = []
+        burstAlarmListAnalogue = []
         filteredEchoesList = []
         internalEchoesList = echoes
 
@@ -131,12 +132,17 @@ class SignalProcessor:
                     velBinCandidates.append(math.floor(velCandidate/self.dopplerBinSize) + self.lowestPositiveDopplerBin)
                     velCandidate += muv
                 
-                # TODO: Is this the point to append the MP's? 
+                # Digitized Alarm List for SIP internal M/N Processing
                 burstAlarmList.append([])
                 burstAlarmList[-1].append(rangeGateCandidates)
                 burstAlarmList[-1].append(velBinCandidates) 
                 burstAlarmList[-1].append(echo[2]) # Az Monopulse
                 burstAlarmList[-1].append(echo[3]) # El Monopulse
+
+                # Non-Digitized List purely for Visualization
+                burstAlarmListAnalogue.append([])
+                burstAlarmListAnalogue[-1].append(rangeCandidates)
+                burstAlarmListAnalogue[-1].append(velCandidates)
                 
         # Construct RESI Alarm List, contains the last N Burst Alarm Lists
         # Alarm:                [[R1, R2, ...], [RR1, RR2, ...], AzMP, ElMp]
@@ -205,7 +211,7 @@ class SignalProcessor:
                 self.resiDetectionReportList.pop(0)
 
         # TODO: Returning a "Potential" List seems odd
-        return potentialBurstDetectionList, V_c, filteredEchoesList
+        return potentialBurstDetectionList, V_c, filteredEchoesList, burstAlarmListAnalogue
 
 
                         
