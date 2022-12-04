@@ -264,7 +264,7 @@ class RadarSimulator:
 
     def startReplay(self):
         if self.btnStartReplay["state"] != "disabled":
-            replay = RadarReplay("replay.json")
+            replay = RadarReplay("replay.json", self.entRadarFile.get(), self.entRadarSettingsFile.get(), self.simResult)
 
     # Text Outputs
     def provideSimulationStatusText(self, simtime):

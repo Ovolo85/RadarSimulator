@@ -1,5 +1,6 @@
 class Scanner:
     
+    # TODO: Check for Gimbal Limits from Radar.json
     def __init__(self, beamWidth, scanCenter, halfwidth, bars, speed):
         self.beamWidth = beamWidth
         self.scanCenter = scanCenter

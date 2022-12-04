@@ -1,4 +1,14 @@
 {
     "Size":[400,400], 
-    "Framerate": 30
+    "Framerate": 30,
+    
+    "RangeScale": 80000,
+
+    "PlotLifeTime": 2,
+    "PlotInitialSize":8,
+
+    "BackgroundColor":[0,0,0],
+    "ScannerColor":[100,100,100],
+    "ScanBorderColor":[0,0,200], 
+    "PlotColor":[240,180,70]
 }
