@@ -93,7 +93,7 @@ class Radar:
                 detectionRangeRate = None
             geoAz = mod(heading + antennaAz + detection[2], 360)
             self.detectionReports.append([time, detectionRange, detectionRangeRate, geoAz, antennaEl + detection[3]])
-            self.ownshipNEDatDetectionReport.append([time, ownshipNED[0], ownshipNED[1], ownshipNED[2]])
+            self.ownshipNEDatDetectionReport.append([time, ownshipNED[0], ownshipNED[1], ownshipNED[2], heading])
 
     def operate(self, runtime):
         time = 0.0
@@ -142,7 +142,7 @@ class Radar:
             time += self.burstLength
             self.antennaAngles.append([time, az, el, bar])
 
-        
+        # TODO: OwnshipNEDatDetection now also reports Heading. Shall be renamed
         
         return {"AntennaAnglesHeader" : ["time", "Azimuth", "Elevation", "Bar"], "AntennaAngles" : self.antennaAngles, 
         "EchoesHeader":["time", "PRF", "Range", "RangeRate", "Monopuls Az", "Monopuls El"], "Echoes":self.echoes, 
@@ -150,7 +150,7 @@ class Radar:
         "BarTimesHeader": ["BarNumber", "StartTime", "EndTime"], "BarTimes":self.barTimes, 
         "BarsWithDetectionsHeader": ["BarNumber"], "BarsWithDetections":self.barsWithDetections, 
         "DetectionReportsHeader": ["time", "Range", "RangeRate", "Bearing", "Elevation"], "DetectionReports": self.detectionReports,
-        "OwnshipNEDatDetectionHeader": ["time", "North", "East", "Down"], "OwnshipNEDatDetection":self.ownshipNEDatDetectionReport,
+        "OwnshipNEDatDetectionHeader": ["time", "North", "East", "Down", "Heading"], "OwnshipNEDatDetection":self.ownshipNEDatDetectionReport,
         "FilteredEchoesHeader": ["time", "PRF", "Range", "RangeRate", "Monopuls Az", "Monopulse El"], "FilteredEchoes": self.filteredEchoes,
         "ClutterVelocitiesHeader": ["time", "ClutterVelocity"], "ClutterVelocities": self.clutterVelocities, 
         "AnalogueAlarmsHeader": ["time", "PRF", "Ranges", "Velocities"], "AnalogueAlarms": self.analogueAlarms}
