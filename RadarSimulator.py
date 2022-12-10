@@ -1,5 +1,6 @@
 
 from OutputStore import OutputStore
+from Ownship import Ownship
 from RadarVisualizer import RadarVisualizer
 from RfEnvironment import RfEnvironment
 from ScenarioProcessor import ScenarioProcessor
@@ -161,8 +162,9 @@ class RadarSimulator:
         self.scenario = self.scenarioProcessor.processScenario(scenarioFile, radarFile)
 
         self.rfEnvironment = RfEnvironment(self.scenario, self.entSimulationFile.get(), self.entRadarFile.get())
+        self.ownship = Ownship(self.scenario, self.entRadarFile.get())
         
-        self.radar = Radar(self.entRadarFile.get(), self.entRadarSettingsFile.get(), self.rfEnvironment)
+        self.radar = Radar(self.entRadarFile.get(), self.entRadarSettingsFile.get(), self.rfEnvironment, self.ownship)
 
         self.visualizer = RadarVisualizer(self.entRadarFile.get(), self.entSimulationFile.get())
 
