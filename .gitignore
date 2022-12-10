@@ -46,3 +46,13 @@ output/RadarSimResults.ipynb
 output/RangeEclipsedEchoes.csv
 test.py
 intro_ball.gif
+Output/AnalogueAlarms.csv
+Output/AntennaAngles.csv
+Output/BarsWithDetections.csv
+Output/BarTimes.csv
+Output/ClutterVelocities.csv
+Output/DetectionReports.csv
+Output/Echoes.csv
+Output/FilteredEchoes.csv
+Output/OwnshipNEDatDetection.csv
+Output/RangeEclipsedEchoes.csv
