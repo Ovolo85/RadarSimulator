@@ -272,6 +272,7 @@ class RadarSimulator:
         self.statusText.insert(tk.END, "Simulation duration: " + str(simtime) + " s\n")
         self.statusText.insert(tk.END, "Scan Bars with Detections: " + str(self.simResult["BarsWithDetections"]) + "\n")
         self.statusText.insert(tk.END, "Detections: 1.." + str(len(self.simResult["DetectionReports"])) + "\n")
+        # TODO: log number of bursts required per detection
 
     def provideScenarioStatusText(self):
         osStart = self.scenario[0][0][0]

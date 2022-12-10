@@ -162,4 +162,4 @@ def normalizeVector(vector):
     return normVec
 
 if __name__ == "__main__":
-    print(getNormalOfPlane([5,5,0], [0,1,0]))
+    print(str(calculateMUV(15000, 10000000000)))

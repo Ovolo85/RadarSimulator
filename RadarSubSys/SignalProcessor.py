@@ -79,7 +79,6 @@ class SignalProcessor:
         ambiguousV_cDopplerBin = math.floor(ambiguousV_c/self.dopplerBinSize) + self.lowestPositiveDopplerBin
         
         # Perform MBC Filtering
-        # TODO: store the filtered Echoes to make them analyzable
         if self.MBCNotchActive:
             if self.MBCNotchType == "static":
                 for i, echo in enumerate(internalEchoesList):
@@ -87,7 +86,6 @@ class SignalProcessor:
                     if abs( ambiguousEchoDopplerBin - ambiguousV_cDopplerBin) <= self.MBCHalfWidthInBins:
                         filteredEchoesList.append(echo)
                         internalEchoesList.pop(i)
-                        # TODO: There are Echoes lost due to Ambiguities with MBC RR. Seems realistic, but double check
             else:
                 print("Unknown Type of MBC Filtering selected.")
 
@@ -156,7 +154,7 @@ class SignalProcessor:
         potentialBurstDetectionList = []
         
         if len(self.resiAlarmLists) == self.n:
-            for alarm in self.resiAlarmLists[-1]: # Alarms from last Burst
+            for alarm in self.resiAlarmLists[-1]: # Alarms from current Burst
                 
                 rangeGateAlarmCounter = []
                 dopplerBinAlarmCounter = []

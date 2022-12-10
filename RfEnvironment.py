@@ -14,6 +14,7 @@ class RfEnvironment:
     def measure(self, frq, prf, pw, az, el, time):
         
         # TODO: Implement Resolution criteria
+        # TODO: Two in-beam targets shall induce one echo with a set of ranges and dopplers without relationship. The Radar shall not know immediately which Vel belongs to which Doppler
 
         # Intialize Data Structures
         burstEchoes = []
