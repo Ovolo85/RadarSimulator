@@ -83,6 +83,17 @@ class RfEnvironment:
                             rangeEclipsedEchoes.append([measuredRange, measuredRangeRate, azMonopulse, elMonopulse])
                     else:
                         burstEchoes.append([measuredRange, measuredRangeRate, azMonopulse, elMonopulse])
+        
+        resolutionCasesToBeResolved = []
+        if self.limitedResolution and len(burstEchoes > 1):
+            for i, echo in enumerate(burstEchoes):
+                
+                for n, echoToCheckAgainst in enumerate(burstEchoes):
+                    if i != n:
+                        if abs(echo[0] - echoToCheckAgainst[0]) <= pw * c / 2:
+                            
+
+
         return burstEchoes, rangeEclipsedEchoes
         
     
@@ -94,6 +105,7 @@ class RfEnvironment:
         self.eclipsingEnabled = data["RangeEclipsing"]
         self.maxRange = data["MaxRange"]
         self.beamOverlap = data["BeamOverlap"]
+        self.limitedResolution = data["LimitedResolution"]
 
     def getRadarDataFromJSON(self, radarFile):
         with open(radarFile) as json_file:
