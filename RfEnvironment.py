@@ -14,6 +14,7 @@ class RfEnvironment:
     def measure(self, frq, prf, pw, az, el, time):
         
         # TODO: Implement Resolution criteria
+        # TODO: Two in-beam targets shall induce one echo with a set of ranges and dopplers without relationship. The Radar shall not know immediately which Vel belongs to which Doppler
 
         # Intialize Data Structures
         burstEchoes = []
@@ -82,20 +83,20 @@ class RfEnvironment:
                             rangeEclipsedEchoes.append([measuredRange, measuredRangeRate, azMonopulse, elMonopulse])
                     else:
                         burstEchoes.append([measuredRange, measuredRangeRate, azMonopulse, elMonopulse])
+        
+        resolutionCasesToBeResolved = []
+        if self.limitedResolution and len(burstEchoes > 1):
+            for i, echo in enumerate(burstEchoes):
+                
+                for n, echoToCheckAgainst in enumerate(burstEchoes):
+                    if i != n:
+                        if abs(echo[0] - echoToCheckAgainst[0]) <= pw * c / 2:
+                            
+
+
         return burstEchoes, rangeEclipsedEchoes
         
-    # TODO: Maybe this would better be located in a "Ownship" Simulation? Instead of RF Environment...
-    def getOwnshipSpeed(self, time):
-        timeStep = round(time / self.burstLength)
-        return self.scenario[0][timeStep][5]
-
-    def getOwnshipHeading(self, time):
-        timeStep = round(time / self.burstLength)
-        return self.scenario[0][timeStep][4]
-
-    def getOwnshipNED(self, time):
-        timeStep = round(time / self.burstLength)
-        return [self.scenario[0][timeStep][1], self.scenario[0][timeStep][2], self.scenario[0][timeStep][3]]
+    
 
     def getSimulationSettingFromJSON(self, simulationSettingFile):
         with open(simulationSettingFile) as json_file:
@@ -104,6 +105,7 @@ class RfEnvironment:
         self.eclipsingEnabled = data["RangeEclipsing"]
         self.maxRange = data["MaxRange"]
         self.beamOverlap = data["BeamOverlap"]
+        self.limitedResolution = data["LimitedResolution"]
 
     def getRadarDataFromJSON(self, radarFile):
         with open(radarFile) as json_file:

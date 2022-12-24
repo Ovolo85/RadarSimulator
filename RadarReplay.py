@@ -35,11 +35,15 @@ class RadarReplay:
                     running = False
             
             self.screen.fill(self.backgroundColor)
-            #screen.blit(ball, ballrect)
 
             self.drawBackground()
             self.drawAntennaPosition(frame)
             self.drawPlots(frame)
+
+            font = pygame.font.SysFont(None, 22)
+            rangeScaleText = font.render(str(self.rangeScale), True, self.textColor)
+            self.screen.blit(rangeScaleText, (10, 10))
+
             pygame.display.flip()
 
             frame += 1
@@ -64,6 +68,10 @@ class RadarReplay:
         pygame.draw.line(self.screen,self.scanBorderColor, (rightScanLimit, 0), (rightScanLimit, self.size[1]))
         pygame.draw.line(self.screen,self.scanBorderColor, (middleLine, 0), (middleLine, self.size[1]))
 
+        pygame.draw.line(self.screen, self.scanGridColor, (leftScanLimit, int(self.size[0]/4)), (rightScanLimit, int(self.size[0]/4)))
+        pygame.draw.line(self.screen, self.scanGridColor, (leftScanLimit, int(self.size[0]/2)), (rightScanLimit, int(self.size[0]/2)))
+        pygame.draw.line(self.screen, self.scanGridColor, (leftScanLimit, int(self.size[0]/4*3)), (rightScanLimit, int(self.size[0]/4*3)))
+        
     def drawPlots(self, frame):
         if self.plotDataInFrameRate[frame] != None:
             for plot in self.plotDataInFrameRate[frame]:
@@ -129,7 +137,9 @@ class RadarReplay:
         self.scannerColor = data["ScannerColor"]
         self.backgroundColor = data["BackgroundColor"]
         self.scanBorderColor = data["ScanBorderColor"]
+        self.scanGridColor = data["ScanGridColor"]
         self.plotColor = data["PlotColor"]
+        self.textColor = data["TextColor"]
 
     def getRadarDataFromJSON(self, radarDataFile):
         with open(radarDataFile) as json_file:

@@ -30,5 +30,5 @@ class Receiver:
         usedPrf = self.currentPrf
         self.currentPrf += 1
         self.currentPrf = mod(self.currentPrf, self.numberOfPrfs)
-        # TODO: Design Flaw: RangeEclipsedEchoes get now routed throuch the Radar just to report them for analysis... 
+        # TODO: Design Flaw: RangeEclipsedEchoes get now routed through the Radar just to report them for analysis... 
         return [self.carrierFrequency, usedPrf, echoes, rangeEclipsedEchoes]

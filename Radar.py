@@ -1,11 +1,14 @@
 import json
 import matplotlib.pyplot as plt
 from numpy import array, mod
+from Ownship import Ownship
 
 from RadarSubSys.Receiver import Receiver
 from RadarSubSys.Scanner import Scanner
 from RadarSubSys.SignalProcessor import SignalProcessor
 from RadarSubSys.Tracker import Tracker
+
+from RfEnvironment import RfEnvironment
 
 from UtilityFunctions import calculateLowestPositiveDopplerBin
 
@@ -13,7 +16,7 @@ class Radar:
     ## Main Class of the Radar Simulator
     # TODO: We might have some issues with Euler Angles from time to time...
 
-    def __init__(self, radarDataFile, radarSettingFile, rfEnvironment):
+    def __init__(self, radarDataFile, radarSettingFile, rfEnvironment: RfEnvironment, ownship : Ownship):
         
         self.getRadarDataFromJSON(radarDataFile)
         self.getRadarSettingFromJSON(radarSettingFile)
@@ -25,6 +28,7 @@ class Radar:
         self.receiver = Receiver(self.carrierFrequency, self.frequencyAgility, self.prfs, self.pulseWidth, rfEnvironment)
         
         self.rfEnvironment = rfEnvironment
+        self.ownship = ownship
         
         # Lists for Simulation Results
         self.antennaAngles = []
@@ -117,12 +121,12 @@ class Radar:
                 self.appendToRangeEclipsedEchoList(time, usedPRF, rangeEclipsedEchoesFromBurst)
                 
                 # Signal Processor
-                ownshipSpeed = self.rfEnvironment.getOwnshipSpeed(time)
+                ownshipSpeed = self.ownship.getOwnshipSpeed(time)
                 detectionList, clutterVelocity, filteredEchoesList, burstAlarmListAnalogue = self.sip.processBurst(echoesFromBurst, usedPRF, usedCarrierFrequency, ownshipSpeed, az, el)
                 if len(detectionList) > 0:
                     if not self.barsWithDetections.__contains__(currentBar):
                         self.barsWithDetections.append([currentBar])
-                self.appendToDetectionList(time, detectionList, az, el, self.rfEnvironment.getOwnshipHeading(time), self.rfEnvironment.getOwnshipNED(time))
+                self.appendToDetectionList(time, detectionList, az, el, self.ownship.getOwnshipHeading(time), self.ownship.getOwnshipNED(time))
                 self.clutterVelocities.append([time, clutterVelocity])
                 self.appendToFilteredEchoList(time, usedPRF, filteredEchoesList)
                 self.appendToAnalogueAlarmList(time, usedPRF, burstAlarmListAnalogue)

@@ -10,5 +10,7 @@
     "BackgroundColor":[0,0,0],
     "ScannerColor":[100,100,100],
     "ScanBorderColor":[0,0,200], 
-    "PlotColor":[240,180,70]
+    "ScanGridColor":[0,0,100],
+    "PlotColor":[240,180,70], 
+    "TextColor":[200,200,200]
 }

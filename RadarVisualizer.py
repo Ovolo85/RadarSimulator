@@ -350,15 +350,17 @@ class RadarVisualizer:
             else:
                 break
                 
-        figure = Figure(figsize=(5, 4), dpi=100)
+        figure = Figure(figsize=(7, 4), dpi=100)
         ax = figure.add_subplot(111)
         
         symbol = 0
         for echo in resiEchoes:
-            ax.plot(echo[2], echo[3], self.symboltable[symbol], label=self.prfs[echo[1]])
+            ax.plot(echo[2], echo[3], self.symboltable[symbol], label= "[" + str(echo[1]) + "] " + str(self.prfs[echo[1]]))
             symbol += 1
 
         ax.legend(loc="upper right")
+        ax.xaxis.set_label_text("Range [m]")
+        ax.yaxis.set_label_text("Range Rate [m/s]")
 
         canvas = FigureCanvasTkAgg(figure, newWin)
         canvas.draw()
@@ -393,7 +395,7 @@ class RadarVisualizer:
             else:
                 break
         
-        figure = Figure(figsize=(5, 4), dpi=100)
+        figure = Figure(figsize=(14, 8), dpi=100)
         ax = figure.add_subplot(111)
 
         symbol = 0
@@ -406,12 +408,14 @@ class RadarVisualizer:
             
             arrayToPlot = np.array(alarmRDMat)
 
-            ax.plot(arrayToPlot[:,0], arrayToPlot[:,1], self.symboltable[symbol], label=self.prfs[alarm[1]])
+            ax.plot(arrayToPlot[:,0], arrayToPlot[:,1], self.symboltable[symbol], label= "[" + str(alarm[1]) + "] " + str(self.prfs[alarm[1]]))
             symbol += 1
 
         ax.legend(loc="upper right")
+        ax.xaxis.set_label_text("Range [m]")
+        ax.yaxis.set_label_text("Range Rate [m/s]")
         
-        # TODO: max Range shall not be hardcoded
+
         rangeTicks = np.arange(0, self.maxRange, self.rangeGateSize * 100)
         rangeGateTicks = np.arange(0, self.maxRange, self.rangeGateSize)
 
