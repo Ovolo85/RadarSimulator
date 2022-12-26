@@ -94,7 +94,7 @@ class RfEnvironment:
                                 if i != n: 
                                     rangeDifference = echo[0] - echoToBeCheckedAgainst[0]
                                     if rangeDifference < rangeResolution and rangeDifference > 0:
-                                        print("Deleted Echo due to Range Resolution")
+                                        
                                         burstEchoes.pop(i)
                                         echoRemoved = True
                 if not echoRemoved:
