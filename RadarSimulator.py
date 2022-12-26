@@ -49,7 +49,7 @@ class RadarSimulator:
         self.entRadarSettingsFile.grid(row=2, column = 2)
 
         self.entScenarioFile = tk.Entry(master=frmCol1, )
-        self.entScenarioFile.insert(0, "scenario_notching.json")
+        self.entScenarioFile.insert(0, "scenario_notching_2ship.json")
         self.entScenarioFile.grid(row=3, column = 2)
 
         self.entSimulationFile = tk.Entry(master=frmCol1, )
@@ -156,7 +156,7 @@ class RadarSimulator:
     # Button Methods
 
     def loadScenario(self, event):
-        scenarioFile = self.entScenarioFile.get()
+        scenarioFile = "Scenarios/" + self.entScenarioFile.get()
         radarFile = self.entRadarFile.get()
         
         self.scenario = self.scenarioProcessor.processScenario(scenarioFile, radarFile)

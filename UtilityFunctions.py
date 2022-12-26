@@ -70,6 +70,11 @@ def calculateEclipsingZoneSize(pw):
     size = (pw * c) / 2
     return size
 
+def calculateRangeResolution(pw):
+    global c
+    resolution = (pw * c) / 2
+    return resolution
+
 def calculateClutterVel(az, el, vel):
     return vel * cos(deg2rad(az)) * cos(deg2rad(el))
 
