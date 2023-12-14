@@ -13,9 +13,6 @@ class RfEnvironment:
 
     def measure(self, frq, prf, pw, az, el, time):
         
-        # TODO: Implement Resolution criteria
-        # TODO: Two in-beam targets shall induce one echo with a set of ranges and dopplers without relationship. The Radar shall not know immediately which Vel belongs to which Doppler
-
         # Intialize Data Structures
         burstEchoes = []
         rangeEclipsedEchoes = []
@@ -84,13 +81,32 @@ class RfEnvironment:
                     else:
                         burstEchoes.append([measuredRange, measuredRangeRate, azMonopulse, elMonopulse])
         
-        resolutionCasesToBeResolved = []
-        if self.limitedResolution and len(burstEchoes > 1):
-            for i, echo in enumerate(burstEchoes):
+        if self.limitedResolution:
+            rangeResolution = calculateRangeResolution(pw)
+            rangeResolutionProcessed = False
+            
+            while not rangeResolutionProcessed:
+                echoRemoved = False
+                for i, echo in enumerate(burstEchoes):
+                    if not echoRemoved:
+                        for n, echoToBeCheckedAgainst in enumerate(burstEchoes):
+                            if not echoRemoved:
+                                if i != n: 
+                                    rangeDifference = echo[0] - echoToBeCheckedAgainst[0]
+                                    if rangeDifference < rangeResolution and rangeDifference > 0:
+                                        
+                                        burstEchoes.pop(i)
+                                        echoRemoved = True
+                if not echoRemoved:
+                    rangeResolutionProcessed = True
+        
+        # resolutionCasesToBeResolved = []
+        # if self.limitedResolution and len(burstEchoes > 1):
+        #     for i, echo in enumerate(burstEchoes):
                 
-                for n, echoToCheckAgainst in enumerate(burstEchoes):
-                    if i != n:
-                        if abs(echo[0] - echoToCheckAgainst[0]) <= pw * c / 2:
+        #         for n, echoToCheckAgainst in enumerate(burstEchoes):
+        #             if i != n:
+        #                 if abs(echo[0] - echoToCheckAgainst[0]) <= pw * c / 2:
                             
 
 

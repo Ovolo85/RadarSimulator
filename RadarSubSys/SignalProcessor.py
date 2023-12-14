@@ -152,6 +152,7 @@ class SignalProcessor:
 
         # M/N Processing
         potentialBurstDetectionList = []
+        burstDetectionList = []
         
         if len(self.resiAlarmLists) == self.n:
             for alarm in self.resiAlarmLists[-1]: # Alarms from current Burst
@@ -198,18 +199,24 @@ class SignalProcessor:
             
             # Remove Detections already reported within resolution interval
             # TODO: Still double reports, possibly due to RG Jumps in neighboring RCs
+            doubleReportFilterMask = [True] * len(potentialBurstDetectionList)
+            
+
             for idx, potDet in enumerate(potentialBurstDetectionList):
                 for prevDetList in self.resiDetectionReportList:
                     for prevDet in prevDetList: 
                         if prevDet[0] == potDet[0]:
-                            potentialBurstDetectionList.pop(idx)
+                            doubleReportFilterMask[idx] = False
 
-            self.resiDetectionReportList.append(potentialBurstDetectionList)
+            for idx in range(len(doubleReportFilterMask)):
+                if doubleReportFilterMask[idx]:
+                    burstDetectionList.append(potentialBurstDetectionList[idx])
+
+            self.resiDetectionReportList.append(burstDetectionList)
             if len(self.resiDetectionReportList) > self.n:
                 self.resiDetectionReportList.pop(0)
 
-        # TODO: Returning a "Potential" List seems odd
-        return potentialBurstDetectionList, V_c, filteredEchoesList, burstAlarmListAnalogue
+        return burstDetectionList, V_c, filteredEchoesList, burstAlarmListAnalogue
 
 
                         

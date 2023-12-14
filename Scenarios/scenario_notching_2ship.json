@@ -1,0 +1,62 @@
+{
+    "ownship": 
+        {
+            "north": 0,
+            "east": 0,
+            "down": 0,
+            "heading": 350,
+            "velocity": 200,
+            "pitch":0
+        }
+    ,
+    "targets": [
+        {
+            "north": 60000,
+            "east": 0,
+            "down": 0,
+            "heading": 180,
+            "velocity": 200,
+            "pitch":0
+        },
+        {
+            "north": 60200,
+            "east": 50,
+            "down": 0,
+            "heading": 180,
+            "velocity": 200,
+            "pitch":0
+        }
+    ], 
+    "ownshipMans": [
+        {
+            "type":"static", "time":120
+            
+        }        
+    ], 
+    "targetMans": [
+        [
+            {
+                "type":"static", "time":20
+            },
+            {
+                "type":"gcurve", "gload":4, "degree": 90
+            },
+            {
+                "type":"static", "time":20
+            },
+            {
+                "type":"gcurve", "gload":4, "degree": -90
+            },
+            {
+                "type":"static", "time":30
+            }
+        ],
+        [
+            {
+                "type":"static", "time":120
+            }
+        ]
+    ]
+
+}
+

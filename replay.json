@@ -1,6 +1,6 @@
 {
-    "Size":[400,400], 
-    "Framerate": 30,
+    "Size":[800,800], 
+    "Framerate": 60,
     
     "RangeScale": 80000,
 
