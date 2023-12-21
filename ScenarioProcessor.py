@@ -11,12 +11,14 @@ class ScenarioProcessor:
     def __init__(self) -> None:
         self.scenario = None
         self.burstLength = None
-        self.ownshipPositions = []
-        self.targetPositions = []
+        
 
     def processScenario(self, scenarioFile, radarFile):
         self.getScenarioFromJSON(scenarioFile)
         self.getRadarDataFromJSON(radarFile)
+
+        self.ownshipPositions = []
+        self.targetPositions = []
         
         # Set Start Condition for Ownship
         self.ownshipPositions.append([0.0, self.scenario.ownShipStartData["north"], 
@@ -87,6 +89,9 @@ class ScenarioProcessor:
         with open(f) as json_file:
             data = json.load(json_file)
         self.burstLength = data["BurstLength"]
+
+    
+
 
     def processGCurve (self, startCondition, manoeuvre):
         

@@ -1,4 +1,4 @@
-import sys, os, time
+import sys, os, time, math
 import numpy as np
 
 # Qt
@@ -89,7 +89,10 @@ class SimulationHandler():
     def __init__(self, dataStore : DataStore, outputStore : OutputStore) -> None:
         self.dataStore = dataStore
         self.outputStore = outputStore
+        
         self.scenarioProcessor = ScenarioProcessor()
+
+        self.simulationPerformed = False
 
     def startSimulation(self, output : QPlainTextEdit):
         
@@ -102,8 +105,8 @@ class SimulationHandler():
         self.ownship = Ownship(self.scenario, self.dataStore.getRadarFile())
         
         self.radar = Radar(self.dataStore.getRadarFile(), self.dataStore.getRadarSettingsFile(), self.rfEnvironment, self.ownship)
-
         self.visualizer = RadarVisualizer(self.dataStore.getRadarFile(), self.dataStore.getSimSettingsFile())
+        
         output.insertPlainText("RF Environment, Ownship, Radar and Visualizer generated...\n")
 
         output.insertPlainText("Simulation Started...\n")
@@ -118,6 +121,8 @@ class SimulationHandler():
         self.outputSimulationStatusText(duration, output)
 
         self.outputStore.writeSimResultToDisk(self.simResult)
+
+        self.simulationPerformed = True
 
     def outputAircraftTimesFromScenario(self, output : QPlainTextEdit):
         osStart = self.scenario[0][0][0]
@@ -135,6 +140,18 @@ class SimulationHandler():
         output.insertPlainText("Detections: 1.." + str(len(self.simResult["DetectionReports"])) + "\n")
         # TODO: log number of bursts required per detection
 
+    def getScenarioData(self):
+        return self.scenario
+    
+    def getNumberOfTargets(self):
+        return len(self.scenario)-1
+    
+    def getVisualizer(self):
+        return self.visualizer
+    
+    def getSimulationPerformed(self):
+        return self.simulationPerformed
+
 class MyTableWidget(QWidget):
     
     def __init__(self, parent, dataStore, simulationHandler):
@@ -146,7 +163,11 @@ class MyTableWidget(QWidget):
                 
         # Add tabs
         self.tabs.addTab(SetupTab(self, dataStore), "Setup")
-        self.tabs.addTab(ScenarioTab(self, dataStore, simulationHandler), "Scenario")
+        startTab = self.tabs.addTab(ScenarioTab(self, dataStore, simulationHandler), "Scenario")
+        self.tabs.addTab(GeoemtryTab(self, dataStore, simulationHandler), "Geometry")
+
+        self.tabs.setCurrentIndex(startTab)
+        
                 
         # Add tabs to widget
         self.layout.addWidget(self.tabs)
@@ -177,8 +198,8 @@ class SetupTab(QWidget):
         self.outputText.setReadOnly(True)
         
         self.columnsLayout = QGridLayout(self)
-        self.layout1 = QVBoxLayout(self)
-        self.layout2 = QVBoxLayout(self)
+        self.layout1 = QVBoxLayout()
+        self.layout2 = QVBoxLayout()
         
         self.layout1.addWidget(self.radarConfigFileLabel)
         self.layout1.addWidget(self.radarConfigFileName)
@@ -195,7 +216,8 @@ class SetupTab(QWidget):
         self.columnsLayout.addLayout(self.layout2, 1, 2)
         self.columnsLayout.setColumnStretch(1,3)
         self.columnsLayout.setColumnStretch(2,7)
-        self.setLayout(self.columnsLayout)
+
+        self.loadConfiguration()
 
     def loadConfiguration(self):
         radar = self.radarConfigFileName.text()
@@ -219,30 +241,38 @@ class ScenarioTab(QWidget):
     def __init__(self, parent, datastore : DataStore, simulationHandler : SimulationHandler):
         super(QWidget, self).__init__(parent)
 
+        self.simulationDone = False
+
         self.dataStore = datastore
         self.simulationHandler = simulationHandler
         
         self.scenarioFileLabel = QLabel("Scenario File")
         self.scenarioDropDown = QComboBox()
         self.updateScenarioFilesFromFolder()
+        self.scenarioDropDown.currentTextChanged.connect(self.selectedScenarioChanged)
         self.updateFolderButton = QPushButton("Update Folder Content")
         self.updateFolderButton.clicked.connect(self.updateScenarioFilesFromFolder)
         self.startProcessingButton = QPushButton("Start Simulation")
         self.startProcessingButton.clicked.connect(self.startSimulation)
         self.statusOutput = QPlainTextEdit()
+        self.figureSelectionLabel = QLabel("Figure Type")
+        self.figureSelectionDropDown = QComboBox()
+        self.figureSelectionDropDown.addItems(["Target Scenario N/E", "Complete Scenario N/E"])
+        self.figureSelectionDropDown.activated.connect(self.updateFigure)
 
         self.plotCanvas = StaticFigureCanvas()
-        #self.plotCanvas.update_figure(5)
 
         self.columnsLayout = QGridLayout(self)
-        self.layout1 = QVBoxLayout(self)
-        self.layout2 = QVBoxLayout(self)
+        self.layout1 = QVBoxLayout()
+        self.layout2 = QVBoxLayout()
 
         self.layout1.addWidget(self.scenarioFileLabel)
         self.layout1.addWidget(self.scenarioDropDown)
         self.layout1.addWidget(self.updateFolderButton)
         self.layout1.addWidget(self.startProcessingButton)
         self.layout1.addWidget(self.statusOutput)
+        self.layout1.addWidget(self.figureSelectionLabel)
+        self.layout1.addWidget(self.figureSelectionDropDown)
         self.layout1.addStretch()
 
         self.layout2.addWidget(self.plotCanvas)
@@ -251,13 +281,29 @@ class ScenarioTab(QWidget):
         self.columnsLayout.addLayout(self.layout2, 1, 2)
         self.columnsLayout.setColumnStretch(1,3)
         self.columnsLayout.setColumnStretch(2,7)
-        self.setLayout(self.columnsLayout)
 
     def updateScenarioFilesFromFolder(self):
         scenariolist =  os.listdir("Scenarios")
         self.scenarioDropDown.clear()
         for s in scenariolist:
             self.scenarioDropDown.addItem(s)
+
+    def selectedScenarioChanged(self):
+        self.simulationDone = False
+        self.updateFigure()
+
+    def updateFigure(self):
+        if self.simulationDone:
+            visualizer = self.simulationHandler.getVisualizer()
+            if self.figureSelectionDropDown.currentIndex() == 0:
+                labels, arraysToPlot, title, xLabel, yLabel = visualizer.plotTargetScenarioTopDownQT(self.simulationHandler.getScenarioData())
+                self.plotCanvas.update_figure_2dim(labels, arraysToPlot, title, xLabel, yLabel, True)
+            if self.figureSelectionDropDown.currentIndex() == 1:
+                labels, arraysToPlot, title, xLabel, yLabel = visualizer.plotCompleteScenarioTopDownQT(self.simulationHandler.getScenarioData())
+                self.plotCanvas.update_figure_2dim(labels, arraysToPlot, title, xLabel, yLabel, True)
+        else:
+            self.plotCanvas.clear_figure()
+            self.statusOutput.setPlainText("Please hit \"Start Simulation\" first")
 
     def startSimulation(self):
         self.statusOutput.setPlainText("")
@@ -266,14 +312,70 @@ class ScenarioTab(QWidget):
         else: 
             self.dataStore.setScenarioFile("Scenarios/" + self.scenarioDropDown.currentText())
             self.simulationHandler.startSimulation(self.statusOutput)
-            self.provideScenarioStatusText()
+            
+            self.simulationDone = True
+
+            self.updateFigure()
+
+class GeoemtryTab(QWidget):
+    def __init__(self, parent, datastore : DataStore, simulationHandler : SimulationHandler):
+        super(QWidget, self).__init__(parent)
+
+        self.selectedTarget = 0
+
+        #self.dataStore = datastore
+        self.simulationHandler = simulationHandler
+
+        self.targetSelectBoxLayout = QGridLayout()
+        targetNoLabel = QLabel("TargetNumber")
+        self.targetSelectEntry = QLineEdit()
+        self.targetSelectBoxLayout.addWidget(targetNoLabel, 1,1)
+        self.targetSelectBoxLayout.addWidget(self.targetSelectEntry, 1,2)
+
+        self.setTargetButton = QPushButton("Set Target")
+        self.setTargetButton.clicked.connect(self.setTarget)
+
+        self.figureSelectionLabel = QLabel("Figure Type")
+        self.figureSelectionDropDown = QComboBox()
+        self.figureSelectionDropDown.addItems(["Range to Target"])
         
-    def provideScenarioStatusText(self):
-        pass   
+        self.plotCanvas = StaticFigureCanvas()
+
+        self.columnsLayout = QGridLayout(self)
+        self.layout1 = QVBoxLayout()
+        self.layout2 = QVBoxLayout()
+
+        self.layout1.addLayout(self.targetSelectBoxLayout)
+        self.layout1.addWidget(self.setTargetButton)
+        self.layout1.addWidget(self.figureSelectionLabel)
+        self.layout1.addWidget(self.figureSelectionDropDown)
+        
+        self.layout1.addStretch()
+
+        self.layout2.addWidget(self.plotCanvas)
+
+        self.columnsLayout.addLayout(self.layout1, 1, 1)
+        self.columnsLayout.addLayout(self.layout2, 1, 2)
+        self.columnsLayout.setColumnStretch(1,3)
+        self.columnsLayout.setColumnStretch(2,7)          
+            
+    def setTarget(self):
+        if self.simulationHandler.getSimulationPerformed() & self.targetSelectEntry.text().isnumeric():
+                tgtNo = int(self.targetSelectEntry.text())
+                if tgtNo > 0 & tgtNo <= self.simulationHandler.getNumberOfTargets():
+                    self.selectedTarget = int(self.targetSelectEntry.text())
+                    self.updateFigure()
+
+    def updateFigure(self):
+        visualizer = self.simulationHandler.getVisualizer()
+        labels, arraysToPlot, title, xLabel, yLabel = visualizer.plotSingleTargetRangeQT(self.simulationHandler.getScenarioData(), self.selectedTarget)
+        self.plotCanvas.update_figure_1dim(labels, arraysToPlot, title, xLabel, yLabel)
+
+
 
 class FigureCanvas(FigureCanvasQTAgg):
     def __init__(self, parent = None):
-        fig = Figure(figsize=(10,7))
+        fig = Figure(tight_layout=True)
         self.axes = fig.add_subplot(111)
         FigureCanvasQTAgg.__init__(self, fig)
         self.setParent(parent)
@@ -284,11 +386,53 @@ class FigureCanvas(FigureCanvasQTAgg):
         FigureCanvas.updateGeometry(self)
 
 class StaticFigureCanvas(FigureCanvas):
-    def update_figure(self, f):
+    def update_figure_2dim(self, labels, arraysToPlot, title, xLabel, yLabel, aspectForced):
         self.axes.cla()
-        t = np.arange(0.0, 3.0, 0.01)
-        s = np.sin(f*np.pi*t)
-        self.axes.plot(t, s)
+        for i in range(len(arraysToPlot)):
+            arrayToPlot = arraysToPlot[i]
+            self.axes.plot(arrayToPlot[:,2], arrayToPlot[:,1], label=labels[i])
+        
+        self.axes.legend(loc="upper right")
+        self.axes.set_title(title)
+        self.axes.set_xlabel(xLabel)
+        self.axes.set_ylabel(yLabel)
+        if aspectForced:
+            self.axes.set_aspect(1)
+            xWidth = abs(self.axes.get_xlim()[0] - self.axes.get_xlim()[1])
+            yWidth = abs(self.axes.get_ylim()[0] - self.axes.get_ylim()[1])
+            xyWidthDiff = abs(xWidth-yWidth)
+            if yWidth > 0.75 * xWidth:
+                xAddition = xyWidthDiff/0.75 / 2
+                self.axes.set_xlim([self.axes.get_xlim()[0] - xAddition, self.axes.get_xlim()[1] + xAddition])
+            else: 
+                pass
+        else:
+            self.axes.set_aspect("auto")
+        
+        self.axes.grid(True)
+
+        self.draw()
+
+    def update_figure_1dim(self, labels, arraysToPlot, title, xLabel, yLabel):
+        self.axes.cla()
+
+        for i in range(len(arraysToPlot)):
+            arrayToPlot = arraysToPlot[i]
+            self.axes.plot(arrayToPlot[:,0], arrayToPlot[:,1], label=labels[i])
+        
+        self.axes.legend(loc="upper right")
+        self.axes.set_title(title)
+        self.axes.set_xlabel(xLabel)
+        self.axes.set_ylabel(yLabel)
+
+        self.axes.grid(True)
+
+        self.draw()
+
+
+    def clear_figure(self):
+        self.axes.cla()
+
         self.draw()
 
 

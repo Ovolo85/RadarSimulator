@@ -64,6 +64,18 @@ class RadarVisualizer:
 
         plt.show()
 
+    def plotCompleteScenarioTopDownQT(self, scenario):
+        labels = []
+        arrayToPlot = []
+        for i in range(len(scenario)):
+            arrayToPlot.append(np.delete(np.array(scenario[i]), slice(3, 7), 1))
+            labels.append("Target" + str(i))
+        labels[0] = "Ownship"
+        title = "Scenario Top-Down View"
+        xLabel = "East [m]"
+        yLabel = "North[m]"
+        return labels, arrayToPlot, title, xLabel, yLabel
+    
     def plotTargetScenarioTopDown(self, scenario):
         
         plt.figure()
@@ -84,6 +96,17 @@ class RadarVisualizer:
         plt.grid(True)
 
         plt.show()
+
+    def plotTargetScenarioTopDownQT(self, scenario):
+        labels = []
+        arrayToPlot = []
+        for i in range(len(scenario) - 1):
+            arrayToPlot.append(np.array(scenario[i+1]))
+            labels.append("Target" + str(i+1))
+        title = "Targets Top-Down View"
+        xLabel = "East [m]"
+        yLabel = "North[m]"
+        return labels, arrayToPlot, title, xLabel, yLabel
 
     def plotTargetScenarioTopDownAndDetectionReports(self, scenario, detectionReports, ownshipNEDatDetection, newWin):
         
@@ -160,6 +183,29 @@ class RadarVisualizer:
         plt.grid(True)
 
         plt.show()
+
+    def plotSingleTargetRangeQT(self, scenario, tgtNo):
+        
+        labels = ["Target " + str(tgtNo)]
+
+        targetData = scenario[tgtNo]
+        targetStartTime = scenario[tgtNo][0][0]
+        ownshipRowOffset = round(targetStartTime / self.burstLength)
+
+        rangesToPlot = []
+        ranges = []
+
+        for idx, position in enumerate(targetData):
+            ownshipPosition = scenario[0][idx + ownshipRowOffset]
+            ranges.append([position[0], vectorToRange(vectorOwnshipToTarget(ownshipPosition, position))])
+
+        rangesToPlot.append(np.array(ranges))
+
+        title = "Target " + str(tgtNo) + " Range"
+        xLabel = "Time[s]"
+        yLabel = "Range[m]"
+        return labels, rangesToPlot, title, xLabel, yLabel
+
 
     def plotAllTargetRangeRatesAndDetectionReports(self, scenario, detectionReports):
         plt.figure()
