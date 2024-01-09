@@ -1,5 +1,10 @@
 import sys, os, time, math
 import numpy as np
+from sys import platform
+import subprocess
+from functools import partial
+
+
 
 # Qt
 from PyQt5.QtWidgets import QSizePolicy, QComboBox, QPlainTextEdit, QGridLayout, QLineEdit, QMainWindow, QApplication, QPushButton, QWidget, QTabWidget,QVBoxLayout, QLabel
@@ -151,6 +156,9 @@ class SimulationHandler():
     
     def getSimulationPerformed(self):
         return self.simulationPerformed
+    
+    def getSimResults(self):
+        return self.simResult
 
 class MyTableWidget(QWidget):
     
@@ -164,7 +172,8 @@ class MyTableWidget(QWidget):
         # Add tabs
         self.tabs.addTab(SetupTab(self, dataStore), "Setup")
         startTab = self.tabs.addTab(ScenarioTab(self, dataStore, simulationHandler), "Scenario")
-        self.tabs.addTab(GeoemtryTab(self, dataStore, simulationHandler), "Geometry")
+        self.tabs.addTab(PureRadarDataTab(self, simulationHandler), "Pure Radar Data")
+        self.tabs.addTab(GeoemtryTab(self, simulationHandler), "Geometry")
 
         self.tabs.setCurrentIndex(startTab)
         
@@ -182,14 +191,20 @@ class SetupTab(QWidget):
         self.radarConfigFileLabel = QLabel("Radar Config File")
         self.radarConfigFileName = QLineEdit()
         self.radarConfigFileName.setText("radar.json")
+        self.radarConfigFileEditBtn = QPushButton("Edit")
+        self.radarConfigFileEditBtn.clicked.connect(partial(self.editFile, self.radarConfigFileName.text()))
 
         self.radarSettingsFileLabel = QLabel("Radar Settings File")
         self.radarSettingsFileName = QLineEdit()
         self.radarSettingsFileName.setText("radar_setting.json")
+        self.radarSettingsFileEditBtn = QPushButton("Edit")
+        self.radarSettingsFileEditBtn.clicked.connect(partial(self.editFile, self.radarSettingsFileName.text()))
 
         self.simulationSettingsFileLabel = QLabel("Simulation Settings File")
         self.simulationSettingsFileName = QLineEdit()
         self.simulationSettingsFileName.setText("sim.json")
+        self.simulationSettingsFileEditBtn = QPushButton("Edit")
+        self.simulationSettingsFileEditBtn.clicked.connect(partial(self.editFile, self.simulationSettingsFileName.text()))
 
         self.loadConfigButton = QPushButton("Load Configuration")
         self.loadConfigButton.clicked.connect(self.loadConfiguration)
@@ -198,15 +213,23 @@ class SetupTab(QWidget):
         self.outputText.setReadOnly(True)
         
         self.columnsLayout = QGridLayout(self)
+        self.gridLayout1 = QGridLayout()
         self.layout1 = QVBoxLayout()
         self.layout2 = QVBoxLayout()
         
-        self.layout1.addWidget(self.radarConfigFileLabel)
-        self.layout1.addWidget(self.radarConfigFileName)
-        self.layout1.addWidget(self.radarSettingsFileLabel)
-        self.layout1.addWidget(self.radarSettingsFileName)
-        self.layout1.addWidget(self.simulationSettingsFileLabel)
-        self.layout1.addWidget(self.simulationSettingsFileName)
+        self.gridLayout1.addWidget(self.radarConfigFileLabel,1,1)
+        self.gridLayout1.addWidget(self.radarConfigFileName,2,1)
+        self.gridLayout1.addWidget(self.radarConfigFileEditBtn, 2, 2)
+        
+        self.gridLayout1.addWidget(self.radarSettingsFileLabel,3,1)
+        self.gridLayout1.addWidget(self.radarSettingsFileName,4,1)
+        self.gridLayout1.addWidget(self.radarSettingsFileEditBtn, 4, 2)
+
+        self.gridLayout1.addWidget(self.simulationSettingsFileLabel,5,1)
+        self.gridLayout1.addWidget(self.simulationSettingsFileName,6,1)
+        self.gridLayout1.addWidget(self.simulationSettingsFileEditBtn, 6, 2)
+        
+        self.layout1.addLayout(self.gridLayout1)
         self.layout1.addWidget(self.loadConfigButton)
         self.layout1.addStretch()
 
@@ -236,6 +259,9 @@ class SetupTab(QWidget):
 
         self.outputText.insertPlainText("SIM SETTINGS: " + simsettings + "\n")
         self.outputText.insertPlainText(self.dataStore.readSimSettingsFileAsText() + "\n")
+    
+    def editFile(self, file):
+        subprocess.run(['open', file], check=True)
         
 class ScenarioTab(QWidget):
     def __init__(self, parent, datastore : DataStore, simulationHandler : SimulationHandler):
@@ -252,9 +278,12 @@ class ScenarioTab(QWidget):
         self.scenarioDropDown.currentTextChanged.connect(self.selectedScenarioChanged)
         self.updateFolderButton = QPushButton("Update Folder Content")
         self.updateFolderButton.clicked.connect(self.updateScenarioFilesFromFolder)
+        self.editScenarioButton = QPushButton("Edit Scenario")
+        self.editScenarioButton.clicked.connect(self.editScenario)
         self.startProcessingButton = QPushButton("Start Simulation")
         self.startProcessingButton.clicked.connect(self.startSimulation)
         self.statusOutput = QPlainTextEdit()
+        self.statusOutput.setReadOnly(True)
         self.figureSelectionLabel = QLabel("Figure Type")
         self.figureSelectionDropDown = QComboBox()
         self.figureSelectionDropDown.addItems(["Target Scenario N/E", "Complete Scenario N/E"])
@@ -269,6 +298,7 @@ class ScenarioTab(QWidget):
         self.layout1.addWidget(self.scenarioFileLabel)
         self.layout1.addWidget(self.scenarioDropDown)
         self.layout1.addWidget(self.updateFolderButton)
+        self.layout1.addWidget(self.editScenarioButton)
         self.layout1.addWidget(self.startProcessingButton)
         self.layout1.addWidget(self.statusOutput)
         self.layout1.addWidget(self.figureSelectionLabel)
@@ -317,8 +347,71 @@ class ScenarioTab(QWidget):
 
             self.updateFigure()
 
+    def editScenario(self):
+        file = "Scenarios/" + self.scenarioDropDown.currentText()
+        subprocess.run(['open', file], check=True)
+        
+        #if platform == "darwin":
+        #    subprocess.call(('open', file))
+        #elif platform == "win32":
+        #    os.startfile(file)
+
+class PureRadarDataTab(QWidget):
+    def __init__(self, parent, simulationHandler : SimulationHandler):
+        super(QWidget, self).__init__(parent)
+
+        self.simulationHandler = simulationHandler
+
+        self.figureSelectionLabel = QLabel("Figure Type")
+        self.figureSelectionDropDown = QComboBox()
+        self.figureSelectionDropDown.addItems(["Eclipsing Zones", "Antenna Angles", "Clutter Velocities"])
+        self.figureSelectionDropDown.activated.connect(self.updateFigure)
+
+        self.statusOutput = QPlainTextEdit()
+        self.statusOutput.setReadOnly(True)
+
+        self.plotCanvas = StaticFigureCanvas()
+
+        self.columnsLayout = QGridLayout(self)
+        self.layout1 = QVBoxLayout()
+        self.layout2 = QVBoxLayout()
+
+        self.layout1.addWidget(self.figureSelectionLabel)
+        self.layout1.addWidget(self.figureSelectionDropDown)
+        self.layout1.addWidget(self.statusOutput)
+
+        self.layout1.addStretch()
+
+        self.layout2.addWidget(self.plotCanvas)
+
+        self.columnsLayout.addLayout(self.layout1, 1, 1)
+        self.columnsLayout.addLayout(self.layout2, 1, 2)
+        self.columnsLayout.setColumnStretch(1,3)
+        self.columnsLayout.setColumnStretch(2,7)
+
+    def updateFigure(self):
+        if self.simulationHandler.getSimulationPerformed():
+            if self.figureSelectionDropDown.currentIndex() == 0:
+                visualizer = self.simulationHandler.getVisualizer()
+                labels, arrayOfArrays, title, xLabels, yLabels = visualizer.plotEclipsingZonesQT()
+                self.plotCanvas.update_multi_figure(labels, arrayOfArrays, title, xLabels, yLabels, labelsOff=True)
+            if self.figureSelectionDropDown.currentIndex() == 1:
+                visualizer = self.simulationHandler.getVisualizer()
+                labels, arrayOfArrays, title, xLabels, yLabels = visualizer.plotAntennaMovementQT(self.simulationHandler.getSimResults()["AntennaAngles"])
+                self.plotCanvas.update_multi_figure(labels, arrayOfArrays, title, xLabels, yLabels, labelsOff=False)
+            if self.figureSelectionDropDown.currentIndex() == 2:
+                visualizer = self.simulationHandler.getVisualizer()
+                labels, arraysToPlot, title, xLabel, yLabel = visualizer.plotClutterVelocitiesQT(self.simulationHandler.getSimResults()["ClutterVelocities"])
+                self.plotCanvas.update_figure_1dim(labels, arraysToPlot, title, xLabel, yLabel)
+            
+        else:
+            self.plotCanvas.clear_figure()
+            self.statusOutput.setPlainText("Please hit \"Start Simulation\" first")
+
+
+
 class GeoemtryTab(QWidget):
-    def __init__(self, parent, datastore : DataStore, simulationHandler : SimulationHandler):
+    def __init__(self, parent, simulationHandler : SimulationHandler):
         super(QWidget, self).__init__(parent)
 
         self.selectedTarget = 0
@@ -375,9 +468,9 @@ class GeoemtryTab(QWidget):
 
 class FigureCanvas(FigureCanvasQTAgg):
     def __init__(self, parent = None):
-        fig = Figure(tight_layout=True)
-        self.axes = fig.add_subplot(111)
-        FigureCanvasQTAgg.__init__(self, fig)
+        self.fig = Figure(tight_layout=True)
+        self.axes = self.fig.add_subplot(111)
+        FigureCanvasQTAgg.__init__(self, self.fig)
         self.setParent(parent)
         self.axes.plot()
         FigureCanvas.setSizePolicy(self,
@@ -388,6 +481,9 @@ class FigureCanvas(FigureCanvasQTAgg):
 class StaticFigureCanvas(FigureCanvas):
     def update_figure_2dim(self, labels, arraysToPlot, title, xLabel, yLabel, aspectForced):
         self.axes.cla()
+        self.fig.clf()
+        self.axes = self.fig.add_subplot(111)
+
         for i in range(len(arraysToPlot)):
             arrayToPlot = arraysToPlot[i]
             self.axes.plot(arrayToPlot[:,2], arrayToPlot[:,1], label=labels[i])
@@ -415,6 +511,8 @@ class StaticFigureCanvas(FigureCanvas):
 
     def update_figure_1dim(self, labels, arraysToPlot, title, xLabel, yLabel):
         self.axes.cla()
+        self.fig.clf()
+        self.axes = self.fig.add_subplot(111)
 
         for i in range(len(arraysToPlot)):
             arrayToPlot = arraysToPlot[i]
@@ -429,9 +527,28 @@ class StaticFigureCanvas(FigureCanvas):
 
         self.draw()
 
+    def update_multi_figure(self, labels, arraysToPlot, title, xLabel, yLabel, labelsOff):
+        self.axes.cla()
+        self.fig.clf()
+
+
+        for i in range(len(labels)):
+            ax = self.fig.add_subplot(len(arraysToPlot), 1, i+1)
+            ax.plot(arraysToPlot[i][:,0], arraysToPlot[i][:,1])
+            if i == 0: 
+                ax.set_title(title)
+            if not labelsOff:
+                ax.set_xlabel(xLabel[i])
+                ax.set_ylabel(yLabel[i])
+
+        #self.axes.grid(True)
+
+        self.draw()
+
 
     def clear_figure(self):
         self.axes.cla()
+        self.fig.clf()
 
         self.draw()
 

@@ -257,8 +257,6 @@ class RadarVisualizer:
         plt.grid()
         plt.show()
             
-            
-
 
     def plotAllTargetRangesAndDetectionReports(self, scenario, detectionReports):
         plt.figure()
@@ -285,8 +283,6 @@ class RadarVisualizer:
 
         plt.show()
 
-    
-
     # Setting Plots
 
     def plotEclipsingZones(self):
@@ -309,6 +305,31 @@ class RadarVisualizer:
             currentRow += 1
         plt.show()
 
+    def plotEclipsingZonesQT(self):
+        
+        arrayOfArrays = []
+        labels = []
+        title = "Range Eclipsing"
+        xLabels = []
+        yLabels = []
+
+        for prf in self.prfs:
+            prfRange = []
+            ranges = []
+            mur = calculateMUR(prf)
+            pwInMeter = self.pw * c
+            for r in range(self.maxRange):
+                
+                if np.mod(r, mur+pwInMeter) < pwInMeter:
+                    prfRange.append([r, 1])
+                else:
+                    prfRange.append([r, 0])
+            arrayOfArrays.append(np.array(prfRange))
+            labels.append(["Eclipsing"])
+            xLabels.append("Range")
+            yLabels.append("Eclipsed")
+        
+        return labels, arrayOfArrays, title, xLabels, yLabels
 
    
     # Simulation Plots
@@ -333,6 +354,19 @@ class RadarVisualizer:
         
 
         plt.show()
+    
+    def plotAntennaMovementQT(self, antennaAngles):
+        angles = np.array(antennaAngles)
+        elevation = angles[:,[0,2]]
+        azimuth = angles[:,[0,1]]
+        arrayOfArrays = [elevation, azimuth]
+        title = "Antenna Angles"
+        labels = [["Elevation"], ["Azimuth"]]
+        xLabels = ["Time", "Time"]
+        yLabels = ["El Degree", "Az Degree"]
+
+        return labels, arrayOfArrays, title, xLabels, yLabels
+
 
     def plotEchoRanges (self, echoes):
         arrayAllPRFs = np.array(echoes)
@@ -373,6 +407,15 @@ class RadarVisualizer:
 
         ax.set_title("Clutter Velocities - V_C")
         ax.grid()
+
+    def plotClutterVelocitiesQT(self, clutterVelocities):
+        arraysToPlot = [np.array(clutterVelocities)]
+        labels = ["V_c"]
+        title = "Clutter Velocity V_c"
+        xLabel = "Time[s]"
+        yLabel = "V_c [m/s]"
+
+        return labels, arraysToPlot, title, xLabel, yLabel
 
     def plotAmbiguousRangeDopplerMatrixOfDetection(self, simResult, detNo, newWin):
         
