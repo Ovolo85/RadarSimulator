@@ -29,7 +29,7 @@
     ], 
     "ownshipMans": [
         {
-            "type":"static", "time":120
+            "type":"static", "time":140
             
         }        
     ], 
@@ -39,11 +39,21 @@
                 "type":"static", "time":10
             },
             {
+                "type":"constaccel", "time":10, "targetv":250
+            },
+            {
+                "type":"static", "time":10
+            },
+            {
                 "type":"gcurve", "gload":2, "degree": 110
             },
             {
                 "type":"gcurve", "gload":4, "degree": -150
-            }
+            },
+            {
+                "type":"static", "time":10
+            } 
+            
         ], 
         [
             {
@@ -51,6 +61,15 @@
             },
             {
                 "type":"gcurve", "gload":2, "degree": 120
+            },
+            {
+                "type":"constaccel", "time":10, "targetv":120
+            },
+            {
+                "type":"constrateclimb", "rate":15, "targetdown":-500
+            }, 
+            {
+                "type":"static", "time":20
             }
         ]
     ]

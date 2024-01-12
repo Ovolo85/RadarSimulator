@@ -1,4 +1,4 @@
-import json
+import json, math
 
 from numpy import arccos, array, cos, deg2rad, mod, pi, sin, tan
 import matplotlib.pyplot as plt
@@ -36,7 +36,8 @@ class ScenarioProcessor:
         for tgtNumber in range(len(self.scenario.targetStartData)):
             
             # Set Start Condition for current Target
-            self.targetPositions[tgtNumber].append([0.0, self.scenario.targetStartData[tgtNumber]["north"], 
+            self.targetPositions[tgtNumber].append([0.0, 
+                self.scenario.targetStartData[tgtNumber]["north"], 
                 self.scenario.targetStartData[tgtNumber]["east"], 
                 self.scenario.targetStartData[tgtNumber]["down"], 
                 self.scenario.targetStartData[tgtNumber]["heading"], 
@@ -49,11 +50,15 @@ class ScenarioProcessor:
                     manPositions = self.processStatic(self.targetPositions[tgtNumber][-1], man)
                 elif man["type"] == "gcurve":
                     manPositions = self.processGCurve(self.targetPositions[tgtNumber][-1], man)
+                elif man["type"] == "constaccel":
+                    manPositions = self.processConstAccel(self.targetPositions[tgtNumber][-1], man)
+                elif man["type"] == "constrateclimb":
+                    manPositions = self.processConstRateClimb(self.targetPositions[tgtNumber][-1], man)
                 else:
                     print("Unknown Manoeuvre Type " + man["type"])
-                
-                for pos in range(1, len(manPositions)):
-                    self.targetPositions[tgtNumber].append(manPositions[pos])
+                if manPositions != None:  
+                    for pos in range(1, len(manPositions)):
+                        self.targetPositions[tgtNumber].append(manPositions[pos])
 
                         
         # Process Ownship
@@ -62,15 +67,16 @@ class ScenarioProcessor:
                 manPositions = self.processStatic(self.ownshipPositions[-1], man)
             elif man["type"] == "gcurve":
                 manPositions = self.processGCurve(self.ownshipPositions[-1], man)
+            elif man["type"] == "constaccel":
+                manPositions = self.processConstAccel(self.ownshipPositions[-1], man)
+            elif man["type"] == "constrateclimb":
+                manPositions = self.processConstRateClimb(self.ownshipPositions[-1], man)
             else:
                 print("Unknown Manoeuvre Type " + man["type"])
-                
-            for pos in range(1, len(manPositions)):
-                self.ownshipPositions.append(manPositions[pos])
-        
-        
-        
-        
+            if manPositions != None:   
+                for pos in range(1, len(manPositions)):
+                    self.ownshipPositions.append(manPositions[pos])
+            
 
         # Prepare the result to be returned
         result = []
@@ -90,7 +96,66 @@ class ScenarioProcessor:
             data = json.load(json_file)
         self.burstLength = data["BurstLength"]
 
-    
+    def processConstRateClimb(self, startCondition, manoeuvre):
+        #TODO: This does not yet change the Pitch
+        startTime = startCondition[0]
+
+        positions = []
+        positions.append(startCondition)
+        
+        downChange = manoeuvre["targetdown"] - startCondition[3]
+        rate = manoeuvre["rate"]
+        manoeuvreTime = abs(downChange) / rate
+        cycles = int(round(manoeuvreTime / self.burstLength))
+
+        downstep = downChange / cycles
+        distanceDiagonal = startCondition[5] * manoeuvreTime
+        distanceProjected = math.sqrt(distanceDiagonal**2 - downChange**2)
+        alongStep = distanceProjected / cycles
+
+        for cycle in range(cycles):
+            newNorth = positions[-1][1] + (cos(deg2rad(positions[-1][4])) * alongStep) 
+            newEast = positions[-1][2] + (sin(deg2rad(positions[-1][4])) * alongStep)
+            newDown = positions[-1][3] + downstep
+            newHeading = positions[-1][4]
+            newVel = positions[-1][5]
+            newPitch = positions[-1][6]
+
+            positions.append([startTime + self.burstLength*cycle, newNorth, newEast, newDown, newHeading, newVel, newPitch])
+
+        positions.pop(0)
+        return positions
+
+    def processConstAccel(self, startCondition, manoeuvre):
+        startTime = startCondition[0]
+
+        positions = []
+        positions.append(startCondition)
+
+        time = int(manoeuvre["time"])
+        velChange = int(manoeuvre["targetv"])-startCondition[5]
+        velChangePerSimStep = velChange / time * self.burstLength
+        velocity = startCondition[5]
+
+        cycles = int(manoeuvre["time"] / self.burstLength)
+
+        for cycle in range(cycles):
+            velocity = velocity + velChangePerSimStep
+            distance = velocity * self.burstLength
+
+            newNorth = positions[-1][1] + (cos(deg2rad(positions[-1][4])) * distance) 
+            newEast = positions[-1][2] + (sin(deg2rad(positions[-1][4])) * distance)
+            newDown = positions[-1][3]
+            newHeading = positions[-1][4]
+            newVel = velocity
+            newPitch = positions[-1][6]
+
+            positions.append([startTime + self.burstLength*cycle, newNorth, newEast, newDown, newHeading, newVel, newPitch])
+
+        positions.pop(0)
+        return positions
+
+        
 
 
     def processGCurve (self, startCondition, manoeuvre):
@@ -153,6 +218,7 @@ class ScenarioProcessor:
         positions.append(startCondition)
         distance = startCondition[5] * self.burstLength
         cycles = int(manoeuvre["time"] / self.burstLength)
+
         
         for cycle in range(cycles):
             newNorth = positions[-1][1] + (cos(deg2rad(positions[-1][4])) * distance) 

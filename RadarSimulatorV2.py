@@ -261,7 +261,13 @@ class SetupTab(QWidget):
         self.outputText.insertPlainText(self.dataStore.readSimSettingsFileAsText() + "\n")
     
     def editFile(self, file):
-        subprocess.run(['open', file], check=True)
+        if platform == "win32":
+
+            subprocess.run(['notepad', file], check=True)
+
+        else:
+
+            subprocess.run(['open', file], check=True)
         
 class ScenarioTab(QWidget):
     def __init__(self, parent, datastore : DataStore, simulationHandler : SimulationHandler):
@@ -286,7 +292,7 @@ class ScenarioTab(QWidget):
         self.statusOutput.setReadOnly(True)
         self.figureSelectionLabel = QLabel("Figure Type")
         self.figureSelectionDropDown = QComboBox()
-        self.figureSelectionDropDown.addItems(["Target Scenario N/E", "Complete Scenario N/E"])
+        self.figureSelectionDropDown.addItems(["Target Scenario N/E", "Complete Scenario N/E", "Target D over Time"])
         self.figureSelectionDropDown.activated.connect(self.updateFigure)
 
         self.plotCanvas = StaticFigureCanvas()
@@ -331,6 +337,9 @@ class ScenarioTab(QWidget):
             if self.figureSelectionDropDown.currentIndex() == 1:
                 labels, arraysToPlot, title, xLabel, yLabel = visualizer.plotCompleteScenarioTopDownQT(self.simulationHandler.getScenarioData())
                 self.plotCanvas.update_figure_2dim(labels, arraysToPlot, title, xLabel, yLabel, True)
+            if self.figureSelectionDropDown.currentIndex() == 2:
+                labels, arraysToPlot, title, xLabel, yLabel = visualizer.plotTargetDownVsTimeQT(self.simulationHandler.getScenarioData())
+                self.plotCanvas.update_figure_1dim(labels, arraysToPlot, title, xLabel, yLabel)
         else:
             self.plotCanvas.clear_figure()
             self.statusOutput.setPlainText("Please hit \"Start Simulation\" first")
@@ -349,12 +358,14 @@ class ScenarioTab(QWidget):
 
     def editScenario(self):
         file = "Scenarios/" + self.scenarioDropDown.currentText()
-        subprocess.run(['open', file], check=True)
         
-        #if platform == "darwin":
-        #    subprocess.call(('open', file))
-        #elif platform == "win32":
-        #    os.startfile(file)
+        if platform == "win32":
+
+            subprocess.run(['notepad', file], check=True)
+
+        else:
+
+            subprocess.run(['open', file], check=True)
 
 class PureRadarDataTab(QWidget):
     def __init__(self, parent, simulationHandler : SimulationHandler):
@@ -430,7 +441,8 @@ class GeoemtryTab(QWidget):
 
         self.figureSelectionLabel = QLabel("Figure Type")
         self.figureSelectionDropDown = QComboBox()
-        self.figureSelectionDropDown.addItems(["Range to Target"])
+        self.figureSelectionDropDown.addItems(["Range to Target", "Target Range Rate", "Target Az/El"])
+        self.figureSelectionDropDown.activated.connect(self.updateFigure)
         
         self.plotCanvas = StaticFigureCanvas()
 
@@ -460,10 +472,21 @@ class GeoemtryTab(QWidget):
                     self.updateFigure()
 
     def updateFigure(self):
-        visualizer = self.simulationHandler.getVisualizer()
-        labels, arraysToPlot, title, xLabel, yLabel = visualizer.plotSingleTargetRangeQT(self.simulationHandler.getScenarioData(), self.selectedTarget)
-        self.plotCanvas.update_figure_1dim(labels, arraysToPlot, title, xLabel, yLabel)
+        if self.simulationHandler.getSimulationPerformed():
 
+            visualizer = self.simulationHandler.getVisualizer()
+
+            if self.figureSelectionDropDown.currentIndex() == 0: # Range Plot
+                labels, arraysToPlot, title, xLabel, yLabel = visualizer.plotSingleTargetRangeQT(self.simulationHandler.getScenarioData(), self.selectedTarget)
+                self.plotCanvas.update_figure_1dim(labels, arraysToPlot, title, xLabel, yLabel)
+
+            if self.figureSelectionDropDown.currentIndex() == 1: # Range Rate Plot
+                labels, arraysToPlot, title, xLabel, yLabel = visualizer.plotSingleTargetRangeRateQT(self.simulationHandler.getScenarioData(), self.selectedTarget)
+                self.plotCanvas.update_figure_1dim(labels, arraysToPlot, title, xLabel, yLabel, dashedData = [2,3])
+
+            if self.figureSelectionDropDown.currentIndex() == 2: # Az/El Plot
+                labels, arraysToPlot, title, xLabel, yLabel = visualizer.plotSingleTargetAzElQT(self.simulationHandler.getScenarioData(), self.selectedTarget)
+                self.plotCanvas.update_multi_figure(labels, arraysToPlot, title, xLabel, yLabel, False)
 
 
 class FigureCanvas(FigureCanvasQTAgg):
@@ -509,14 +532,17 @@ class StaticFigureCanvas(FigureCanvas):
 
         self.draw()
 
-    def update_figure_1dim(self, labels, arraysToPlot, title, xLabel, yLabel):
+    def update_figure_1dim(self, labels, arraysToPlot, title, xLabel, yLabel, dashedData = []):
         self.axes.cla()
         self.fig.clf()
         self.axes = self.fig.add_subplot(111)
 
         for i in range(len(arraysToPlot)):
             arrayToPlot = arraysToPlot[i]
-            self.axes.plot(arrayToPlot[:,0], arrayToPlot[:,1], label=labels[i])
+            if i in dashedData:
+                self.axes.plot(arrayToPlot[:,0], arrayToPlot[:,1], "--", label=labels[i])
+            else:
+                self.axes.plot(arrayToPlot[:,0], arrayToPlot[:,1], label=labels[i])
         
         self.axes.legend(loc="upper right")
         self.axes.set_title(title)
@@ -527,21 +553,23 @@ class StaticFigureCanvas(FigureCanvas):
 
         self.draw()
 
-    def update_multi_figure(self, labels, arraysToPlot, title, xLabel, yLabel, labelsOff):
+    def update_multi_figure(self, labels, arraysToPlot, title, xLabels, yLabels, labelsOff, dashedData = []):
         self.axes.cla()
         self.fig.clf()
 
 
         for i in range(len(labels)):
             ax = self.fig.add_subplot(len(arraysToPlot), 1, i+1)
-            ax.plot(arraysToPlot[i][:,0], arraysToPlot[i][:,1])
+            if i in dashedData:
+                ax.plot(arraysToPlot[i][:,0], arraysToPlot[i][:,1], "--")
+            else: 
+                ax.plot(arraysToPlot[i][:,0], arraysToPlot[i][:,1])
             if i == 0: 
                 ax.set_title(title)
             if not labelsOff:
-                ax.set_xlabel(xLabel[i])
-                ax.set_ylabel(yLabel[i])
-
-        #self.axes.grid(True)
+                ax.set_xlabel(xLabels[i])
+                ax.set_ylabel(yLabels[i])
+            ax.grid(True)
 
         self.draw()
 

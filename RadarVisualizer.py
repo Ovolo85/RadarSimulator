@@ -72,7 +72,7 @@ class RadarVisualizer:
             labels.append("Target" + str(i))
         labels[0] = "Ownship"
         title = "Scenario Top-Down View"
-        xLabel = "East [m]"
+        xLabel = "East[m]"
         yLabel = "North[m]"
         return labels, arrayToPlot, title, xLabel, yLabel
     
@@ -107,6 +107,21 @@ class RadarVisualizer:
         xLabel = "East [m]"
         yLabel = "North[m]"
         return labels, arrayToPlot, title, xLabel, yLabel
+
+    def plotTargetDownVsTimeQT(self, scenario):
+        labels = []
+        arraysToPlot = []
+
+        for i in range(1,len(scenario)):
+            nedArray = np.delete(np.array(scenario[i]), slice(4, 7), 1)
+            arraysToPlot.append(np.delete(nedArray, slice(1, 3), 1))
+            labels.append("Target " + str(i))
+
+        title = "Target Down"
+        xLabel = "Time[s]"
+        yLabel = "Down[m]"
+
+        return labels, arraysToPlot, title, xLabel, yLabel
 
     def plotTargetScenarioTopDownAndDetectionReports(self, scenario, detectionReports, ownshipNEDatDetection, newWin):
         
@@ -206,6 +221,80 @@ class RadarVisualizer:
         yLabel = "Range[m]"
         return labels, rangesToPlot, title, xLabel, yLabel
 
+    def plotSingleTargetRangeRateQT(self, scenario, tgtNo):
+        
+        labels = ["Target " + str(tgtNo) + " RR", "V_c", "MBC Notch", "MBC Notch"]
+
+        targetData = scenario[tgtNo]
+        targetStartTime = targetData[0][0]
+        ownshipRowOffset = round(targetStartTime / self.burstLength)
+
+        rangeRates = []
+        clutterVelocities = []
+        clutterNotchMaxs = []
+        clutterNotchMins = []
+
+        arraysToPlot = []
+
+        for idx, position in enumerate(targetData):
+            ownshipPosition = scenario[0][idx + ownshipRowOffset]
+
+            sightline = vectorOwnshipToTarget(ownshipPosition, position)
+            sightlineSpherical = northEastDown2AzElRange(sightline[0], sightline[1], sightline[2])
+            
+            rangeRate = calculateRangeRate(sightlineSpherical[0], sightlineSpherical[1], 
+                    ownshipPosition[4], ownshipPosition[6], ownshipPosition[5],
+                    position[4], position[6], position[5])
+            
+            clutterVelocity = calculateClutterVel(sightlineSpherical[0], sightlineSpherical[1], ownshipPosition[5])
+
+            clutterNotchMax = clutterVelocity + self.MBCHalfWidthInBins * self.dopplerBinSize + self.dopplerBinSize/2
+            clutterNotchMin = clutterVelocity - self.MBCHalfWidthInBins * self.dopplerBinSize - self.dopplerBinSize/2
+        
+            rangeRates.append([position[0], rangeRate])
+            clutterVelocities.append([position[0], clutterVelocity])
+            clutterNotchMaxs.append([position[0], clutterNotchMax])
+            clutterNotchMins.append([position[0], clutterNotchMin])        
+        
+        arraysToPlot.append(np.array(rangeRates))
+        arraysToPlot.append(np.array(clutterVelocities))
+        arraysToPlot.append(np.array(clutterNotchMaxs))
+        arraysToPlot.append(np.array(clutterNotchMins))
+
+        title = "Target " + str(tgtNo) + " Range Rate"
+        xLabel = "Time[s]"
+        yLabel = "Range Rate[m/s]"
+
+        return labels, arraysToPlot, title, xLabel, yLabel
+
+    def plotSingleTargetAzElQT(self, scenario, tgtNo): 
+        labels = ["Target " + str(tgtNo) + " Az", "Target " + str(tgtNo) + " El"]
+
+        targetData = scenario[tgtNo]
+        targetStartTime = targetData[0][0]
+        ownshipRowOffset = round(targetStartTime / self.burstLength)
+
+        arrayOfArrays = []
+        azs = [] # Azimuths
+        els = [] # Elevations
+
+        for idx, position in enumerate(targetData):
+            ownshipPosition = scenario[0][idx + ownshipRowOffset]
+
+            sightline = vectorOwnshipToTarget(ownshipPosition, position)
+            sightlineSpherical = northEastDown2AzElRange(sightline[0], sightline[1], sightline[2])
+
+            azs.append([position[0], sightlineSpherical[0]])
+            els.append([position[0], sightlineSpherical[1]])
+
+        arrayOfArrays.append(np.array(azs))
+        arrayOfArrays.append(np.array(els))
+
+        title = "Target " + str(tgtNo) + " Sightline"
+        xLabels = ["Time[s]", "Time[s]"]
+        yLabels = ["Az[deg]", "El[deg]"]
+
+        return labels, arrayOfArrays, title, xLabels, yLabels
 
     def plotAllTargetRangeRatesAndDetectionReports(self, scenario, detectionReports):
         plt.figure()
@@ -255,8 +344,7 @@ class RadarVisualizer:
 
         plt.legend(loc="upper right")
         plt.grid()
-        plt.show()
-            
+        plt.show()         
 
     def plotAllTargetRangesAndDetectionReports(self, scenario, detectionReports):
         plt.figure()
