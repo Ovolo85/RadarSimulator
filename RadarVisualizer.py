@@ -20,6 +20,7 @@ class RadarVisualizer:
         with open(radarDataFile) as json_file:
             data = json.load(json_file)
         
+        self.carrierFrequency = data["CarrierFrequency"] 
         self.prfs = data["PRFs"]
         self.burstLength = data["BurstLength"]
         self.n = data["N"]
@@ -198,6 +199,33 @@ class RadarVisualizer:
         plt.grid(True)
 
         plt.show()
+
+    # def plotSingleTargetRangeQT2(self, scenario, tgtNo):
+    #     fig = Figure(tight_layout=True)
+    #     axes = fig.add_subplot(111)
+
+    #     targetData = scenario[tgtNo]
+    #     targetStartTime = scenario[tgtNo][0][0]
+    #     ownshipRowOffset = round(targetStartTime / self.burstLength)
+
+    #     ranges = []
+
+    #     for idx, position in enumerate(targetData):
+    #         ownshipPosition = scenario[0][idx + ownshipRowOffset]
+    #         ranges.append([position[0], vectorToRange(vectorOwnshipToTarget(ownshipPosition, position))])
+
+    #     rangesToPlot = np.array(ranges)
+
+    #     axes.plot(rangesToPlot[:,0], rangesToPlot[:,1], label = "Target " + str(tgtNo))
+    #     axes.legend(loc="upper right")
+    #     axes.set_title("Target " + str(tgtNo) + " Range")
+    #     axes.set_xlabel("Time[s]")
+    #     axes.set_ylabel("Range[m]")
+
+    #     axes.grid(True)
+
+    #     return fig
+
 
     def plotSingleTargetRangeQT(self, scenario, tgtNo):
         
@@ -549,7 +577,54 @@ class RadarVisualizer:
 
         ax.set_title("Ambiguous R/D Matrix of Echoes of Detection " + str(detNo) + " (Including MBC Echoes)")
         ax.grid()
+
+    def plotAmbiguousRangeDopplerMatrixOfDetectionQT(self, simResult, detNo):
+        resiEchoes = []
+        labels = []
+        borders = []
+        echoRow = 0
+
         
+
+        detReportTime = simResult["DetectionReports"][detNo-1][0]
+        
+        for idx, echo in enumerate(simResult["Echoes"]):
+            if echo[0] == detReportTime:
+                echoRow = idx
+                resiEchoes.append([[echo[2], echo[3]]])
+                prf = self.prfs[echo[1]]
+                labels.append("[" + str(echo[1]) + "] " + str(prf) + " Hz")
+                mur = calculateMUR(prf)
+                muv = calculateMUV(prf, self.carrierFrequency[0])
+                border = [[0, muv], [mur, muv], [mur, 0]]
+                borders.append(np.array(border))
+
+        
+        beginOfResiFound = False
+        while not beginOfResiFound:
+            echoRow -= 1
+            if echoRow >= 0: 
+                if detReportTime - simResult["Echoes"][echoRow][0] < ((self.n - 1) * self.burstLength + self.burstLength / 10):
+                    
+                    resiEchoes.append([[simResult["Echoes"][echoRow][2], simResult["Echoes"][echoRow][3]]])
+                    prf = self.prfs[simResult["Echoes"][echoRow][1]]
+                    labels.append("[" + str(simResult["Echoes"][echoRow][1]) + "] " + str(prf) + " Hz")
+                    mur = calculateMUR(prf)
+                    muv = calculateMUV(prf, self.carrierFrequency[0])
+                    border = [[0, muv], [mur, muv], [mur, 0]]
+                    borders.append(np.array(border))
+                else:
+                    break
+            else:
+                break
+        
+
+        title = "Ambiguous R/D Matrix of Detection " + str(detNo)
+        xLabel = "Range[m]"
+        yLabel = "Doppler[m/s]"
+
+        return labels, resiEchoes, borders, title, xLabel, yLabel
+
     def plotRangeUnfoldOfEchoesOfDetection(self, simResult, detNo, newWin):
         
         resiAlarms = []
@@ -618,6 +693,54 @@ class RadarVisualizer:
         ax.set_title("Range/Doppler Unfold of Detection " + str(detNo))
         
 
+    def plotRangeUnfoldOfEchoesOfDetectionQT(self, simResult, detNo):
+        resiAlarms = []
+        labels = []
+        alarmRow = 0
+        detReportTime = simResult["DetectionReports"][detNo-1][0]
 
+        for idx, alarm in enumerate(simResult["AnalogueAlarms"]):
+            if alarm[0] == detReportTime:
+                prf = self.prfs[alarm[1]]
+                labels.append("[" + str(alarm[1]) + "] " + str(prf) + " Hz")
+                
+                alarmRow = idx
+                resiAlarms.append(alarm)
+
+        beginOfResiFound = False
+        while not beginOfResiFound:
+            alarmRow -= 1
+            if alarmRow >= 0: 
+                if detReportTime - simResult["AnalogueAlarms"][alarmRow][0] < ((self.n - 1) * self.burstLength + self.burstLength / 10):
+                    prf = self.prfs[simResult["AnalogueAlarms"][alarmRow][1]]
+                    labels.append("[" + str(simResult["AnalogueAlarms"][alarmRow][1]) + "] " + str(prf) + " Hz")
+                    resiAlarms.append(simResult["AnalogueAlarms"][alarmRow])
+                else:
+                    break
+            else:
+                break
+
+        allAlarmsUnfoldedForResi = []
+        for alarm in resiAlarms:
+            alarmRDMat = []
+            for rangeAlarm in alarm[2]:
+                for dopplerAlarm in alarm[3]:
+                    alarmRDMat.append([rangeAlarm, dopplerAlarm])
+            
+            allAlarmsUnfoldedForResi.append(alarmRDMat)
+        
+        rangeTicks = np.arange(0, self.maxRange, self.rangeGateSize * 100)
+        rangeGateTicks = np.arange(0, self.maxRange, self.rangeGateSize)
+
+        dopplerTicks = np.arange(self.highestClosingVelocity - self.dopplerBinSize*self.numberOfDopplerBins, self.highestClosingVelocity, self.dopplerBinSize * 50)
+        dopplerBinTicks = np.arange(self.highestClosingVelocity - self.dopplerBinSize*self.numberOfDopplerBins, self.highestClosingVelocity, self.dopplerBinSize)
+
+        ticks = [rangeTicks, rangeGateTicks, dopplerTicks, dopplerBinTicks]
+
+        title = "Unfolded R/D Matrix of Detection " + str(detNo)
+        xLabel = "Range[m]"
+        yLabel = "Range Rate[m/s]"
+
+        return labels, allAlarmsUnfoldedForResi, title, xLabel, yLabel, ticks
 
     

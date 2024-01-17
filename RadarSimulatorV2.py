@@ -1,18 +1,10 @@
-import sys, os, time, math
-import numpy as np
+import sys, os, time
 from sys import platform
 import subprocess
 from functools import partial
 
-
-
 # Qt
-from PyQt5.QtWidgets import QSizePolicy, QComboBox, QPlainTextEdit, QGridLayout, QLineEdit, QMainWindow, QApplication, QPushButton, QWidget, QTabWidget,QVBoxLayout, QLabel
-from PyQt5.QtGui import QIcon
-
-# MatplotLib
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
-from matplotlib.figure import Figure
+from PyQt5.QtWidgets import QComboBox, QPlainTextEdit, QGridLayout, QLineEdit, QMainWindow, QApplication, QPushButton, QWidget, QTabWidget,QVBoxLayout, QLabel, QTableWidget, QTableWidgetItem, QHeaderView
 
 # Own Modules
 from ScenarioProcessor import ScenarioProcessor
@@ -21,6 +13,7 @@ from RadarVisualizer import RadarVisualizer
 from RfEnvironment import RfEnvironment
 from Radar import Radar
 from OutputStore import OutputStore
+from QTFigureWidget import FigureWidget
 
 
 class App(QMainWindow):
@@ -35,8 +28,8 @@ class App(QMainWindow):
         self.title = 'Radar Simulator v2'
         self.left = 0
         self.top = 0
-        self.width = 1200    
-        self.height = 600
+        self.width = 1800    
+        self.height = 900
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
         
@@ -174,6 +167,7 @@ class MyTableWidget(QWidget):
         startTab = self.tabs.addTab(ScenarioTab(self, dataStore, simulationHandler), "Scenario")
         self.tabs.addTab(PureRadarDataTab(self, simulationHandler), "Pure Radar Data")
         self.tabs.addTab(GeoemtryTab(self, simulationHandler), "Geometry")
+        self.tabs.addTab(DetectionTab(self, simulationHandler), "Detections")
 
         self.tabs.setCurrentIndex(startTab)
         
@@ -295,7 +289,7 @@ class ScenarioTab(QWidget):
         self.figureSelectionDropDown.addItems(["Target Scenario N/E", "Complete Scenario N/E", "Target D over Time"])
         self.figureSelectionDropDown.activated.connect(self.updateFigure)
 
-        self.plotCanvas = StaticFigureCanvas()
+        self.plotWidget = FigureWidget()
 
         self.columnsLayout = QGridLayout(self)
         self.layout1 = QVBoxLayout()
@@ -311,12 +305,12 @@ class ScenarioTab(QWidget):
         self.layout1.addWidget(self.figureSelectionDropDown)
         self.layout1.addStretch()
 
-        self.layout2.addWidget(self.plotCanvas)
+        self.layout2.addWidget(self.plotWidget)
 
         self.columnsLayout.addLayout(self.layout1, 1, 1)
         self.columnsLayout.addLayout(self.layout2, 1, 2)
-        self.columnsLayout.setColumnStretch(1,3)
-        self.columnsLayout.setColumnStretch(2,7)
+        self.columnsLayout.setColumnStretch(1,2)
+        self.columnsLayout.setColumnStretch(2,8)
 
     def updateScenarioFilesFromFolder(self):
         scenariolist =  os.listdir("Scenarios")
@@ -333,15 +327,15 @@ class ScenarioTab(QWidget):
             visualizer = self.simulationHandler.getVisualizer()
             if self.figureSelectionDropDown.currentIndex() == 0:
                 labels, arraysToPlot, title, xLabel, yLabel = visualizer.plotTargetScenarioTopDownQT(self.simulationHandler.getScenarioData())
-                self.plotCanvas.update_figure_2dim(labels, arraysToPlot, title, xLabel, yLabel, True)
+                self.plotWidget.canvas.update_figure_2dim(labels, arraysToPlot, title, xLabel, yLabel, True)
             if self.figureSelectionDropDown.currentIndex() == 1:
                 labels, arraysToPlot, title, xLabel, yLabel = visualizer.plotCompleteScenarioTopDownQT(self.simulationHandler.getScenarioData())
-                self.plotCanvas.update_figure_2dim(labels, arraysToPlot, title, xLabel, yLabel, True)
+                self.plotWidget.canvas.update_figure_2dim(labels, arraysToPlot, title, xLabel, yLabel, True)
             if self.figureSelectionDropDown.currentIndex() == 2:
                 labels, arraysToPlot, title, xLabel, yLabel = visualizer.plotTargetDownVsTimeQT(self.simulationHandler.getScenarioData())
-                self.plotCanvas.update_figure_1dim(labels, arraysToPlot, title, xLabel, yLabel)
+                self.plotWidget.canvas.update_figure_1dim(labels, arraysToPlot, title, xLabel, yLabel)
         else:
-            self.plotCanvas.clear_figure()
+            self.plotWidget.canvas.clear_figure()
             self.statusOutput.setPlainText("Please hit \"Start Simulation\" first")
 
     def startSimulation(self):
@@ -358,13 +352,9 @@ class ScenarioTab(QWidget):
 
     def editScenario(self):
         file = "Scenarios/" + self.scenarioDropDown.currentText()
-        
         if platform == "win32":
-
             subprocess.run(['notepad', file], check=True)
-
         else:
-
             subprocess.run(['open', file], check=True)
 
 class PureRadarDataTab(QWidget):
@@ -381,7 +371,7 @@ class PureRadarDataTab(QWidget):
         self.statusOutput = QPlainTextEdit()
         self.statusOutput.setReadOnly(True)
 
-        self.plotCanvas = StaticFigureCanvas()
+        self.plotWidget = FigureWidget()
 
         self.columnsLayout = QGridLayout(self)
         self.layout1 = QVBoxLayout()
@@ -393,33 +383,31 @@ class PureRadarDataTab(QWidget):
 
         self.layout1.addStretch()
 
-        self.layout2.addWidget(self.plotCanvas)
+        self.layout2.addWidget(self.plotWidget)
 
         self.columnsLayout.addLayout(self.layout1, 1, 1)
         self.columnsLayout.addLayout(self.layout2, 1, 2)
-        self.columnsLayout.setColumnStretch(1,3)
-        self.columnsLayout.setColumnStretch(2,7)
+        self.columnsLayout.setColumnStretch(1,2)
+        self.columnsLayout.setColumnStretch(2,8)
 
     def updateFigure(self):
         if self.simulationHandler.getSimulationPerformed():
             if self.figureSelectionDropDown.currentIndex() == 0:
                 visualizer = self.simulationHandler.getVisualizer()
                 labels, arrayOfArrays, title, xLabels, yLabels = visualizer.plotEclipsingZonesQT()
-                self.plotCanvas.update_multi_figure(labels, arrayOfArrays, title, xLabels, yLabels, labelsOff=True)
+                self.plotWidget.canvas.update_multi_figure(labels, arrayOfArrays, title, xLabels, yLabels, labelsOff=True)
             if self.figureSelectionDropDown.currentIndex() == 1:
                 visualizer = self.simulationHandler.getVisualizer()
                 labels, arrayOfArrays, title, xLabels, yLabels = visualizer.plotAntennaMovementQT(self.simulationHandler.getSimResults()["AntennaAngles"])
-                self.plotCanvas.update_multi_figure(labels, arrayOfArrays, title, xLabels, yLabels, labelsOff=False)
+                self.plotWidget.canvas.update_multi_figure(labels, arrayOfArrays, title, xLabels, yLabels, labelsOff=False)
             if self.figureSelectionDropDown.currentIndex() == 2:
                 visualizer = self.simulationHandler.getVisualizer()
                 labels, arraysToPlot, title, xLabel, yLabel = visualizer.plotClutterVelocitiesQT(self.simulationHandler.getSimResults()["ClutterVelocities"])
-                self.plotCanvas.update_figure_1dim(labels, arraysToPlot, title, xLabel, yLabel)
+                self.plotWidget.canvas.update_figure_1dim(labels, arraysToPlot, title, xLabel, yLabel)
             
         else:
-            self.plotCanvas.clear_figure()
+            self.plotWidget.canvas.clear_figure()
             self.statusOutput.setPlainText("Please hit \"Start Simulation\" first")
-
-
 
 class GeoemtryTab(QWidget):
     def __init__(self, parent, simulationHandler : SimulationHandler):
@@ -444,7 +432,7 @@ class GeoemtryTab(QWidget):
         self.figureSelectionDropDown.addItems(["Range to Target", "Target Range Rate", "Target Az/El"])
         self.figureSelectionDropDown.activated.connect(self.updateFigure)
         
-        self.plotCanvas = StaticFigureCanvas()
+        self.plotWidget = FigureWidget()
 
         self.columnsLayout = QGridLayout(self)
         self.layout1 = QVBoxLayout()
@@ -457,12 +445,12 @@ class GeoemtryTab(QWidget):
         
         self.layout1.addStretch()
 
-        self.layout2.addWidget(self.plotCanvas)
+        self.layout2.addWidget(self.plotWidget)
 
         self.columnsLayout.addLayout(self.layout1, 1, 1)
         self.columnsLayout.addLayout(self.layout2, 1, 2)
-        self.columnsLayout.setColumnStretch(1,3)
-        self.columnsLayout.setColumnStretch(2,7)          
+        self.columnsLayout.setColumnStretch(1,2)
+        self.columnsLayout.setColumnStretch(2,8)          
             
     def setTarget(self):
         if self.simulationHandler.getSimulationPerformed() & self.targetSelectEntry.text().isnumeric():
@@ -478,109 +466,122 @@ class GeoemtryTab(QWidget):
 
             if self.figureSelectionDropDown.currentIndex() == 0: # Range Plot
                 labels, arraysToPlot, title, xLabel, yLabel = visualizer.plotSingleTargetRangeQT(self.simulationHandler.getScenarioData(), self.selectedTarget)
-                self.plotCanvas.update_figure_1dim(labels, arraysToPlot, title, xLabel, yLabel)
+                self.plotWidget.canvas.update_figure_1dim(labels, arraysToPlot, title, xLabel, yLabel)
 
             if self.figureSelectionDropDown.currentIndex() == 1: # Range Rate Plot
                 labels, arraysToPlot, title, xLabel, yLabel = visualizer.plotSingleTargetRangeRateQT(self.simulationHandler.getScenarioData(), self.selectedTarget)
-                self.plotCanvas.update_figure_1dim(labels, arraysToPlot, title, xLabel, yLabel, dashedData = [2,3])
+                self.plotWidget.canvas.update_figure_1dim(labels, arraysToPlot, title, xLabel, yLabel, dashedData = [2,3])
 
             if self.figureSelectionDropDown.currentIndex() == 2: # Az/El Plot
                 labels, arraysToPlot, title, xLabel, yLabel = visualizer.plotSingleTargetAzElQT(self.simulationHandler.getScenarioData(), self.selectedTarget)
-                self.plotCanvas.update_multi_figure(labels, arraysToPlot, title, xLabel, yLabel, False)
+                self.plotWidget.canvas.update_multi_figure(labels, arraysToPlot, title, xLabel, yLabel, False)
 
+class DetectionTab(QWidget):
+    def __init__(self, parent, simulationHandler : SimulationHandler):
+        super(QWidget, self).__init__(parent)
 
-class FigureCanvas(FigureCanvasQTAgg):
-    def __init__(self, parent = None):
-        self.fig = Figure(tight_layout=True)
-        self.axes = self.fig.add_subplot(111)
-        FigureCanvasQTAgg.__init__(self, self.fig)
-        self.setParent(parent)
-        self.axes.plot()
-        FigureCanvas.setSizePolicy(self,
-                QSizePolicy.Expanding,
-                QSizePolicy.Expanding)
-        FigureCanvas.updateGeometry(self)
+        self.simulationHandler = simulationHandler
 
-class StaticFigureCanvas(FigureCanvas):
-    def update_figure_2dim(self, labels, arraysToPlot, title, xLabel, yLabel, aspectForced):
-        self.axes.cla()
-        self.fig.clf()
-        self.axes = self.fig.add_subplot(111)
+        self.detectionTableLabel = QLabel("Detections")
 
-        for i in range(len(arraysToPlot)):
-            arrayToPlot = arraysToPlot[i]
-            self.axes.plot(arrayToPlot[:,2], arrayToPlot[:,1], label=labels[i])
+        self.detectionTable = QTableWidget()
+        self.detectionTable.setColumnCount(5)
+        self.detectionTable.setRowCount(20)
+        self.detectionTable.cellClicked.connect(self.updateFigure)
+
+        self.updateDetListButton = QPushButton("Update Detection List")
+        self.updateDetListButton.clicked.connect(self.updateDetectionList)
+
+        self.figureSelectionLabel = QLabel("Figure Type")
+        self.figureSelectionDropDown = QComboBox()
+        self.figureSelectionDropDown.addItems(["Ambiguous R/D Matrix", "Unfolded R/D Matrix"])
+        self.figureSelectionDropDown.activated.connect(self.updateFigure)
+
+        self.notchEchoesTableLabel = QLabel("MBC Notch Echoes")
         
-        self.axes.legend(loc="upper right")
-        self.axes.set_title(title)
-        self.axes.set_xlabel(xLabel)
-        self.axes.set_ylabel(yLabel)
-        if aspectForced:
-            self.axes.set_aspect(1)
-            xWidth = abs(self.axes.get_xlim()[0] - self.axes.get_xlim()[1])
-            yWidth = abs(self.axes.get_ylim()[0] - self.axes.get_ylim()[1])
-            xyWidthDiff = abs(xWidth-yWidth)
-            if yWidth > 0.75 * xWidth:
-                xAddition = xyWidthDiff/0.75 / 2
-                self.axes.set_xlim([self.axes.get_xlim()[0] - xAddition, self.axes.get_xlim()[1] + xAddition])
-            else: 
-                pass
-        else:
-            self.axes.set_aspect("auto")
-        
-        self.axes.grid(True)
+        self.notchEchoesTable = QTableWidget()
+        self.notchEchoesTable.setColumnCount(5)
+        self.notchEchoesTable.setRowCount(20)
 
-        self.draw()
+        self.columnsLayout = QGridLayout(self)
+        self.layout1 = QVBoxLayout()
+        self.layout2 = QVBoxLayout()
 
-    def update_figure_1dim(self, labels, arraysToPlot, title, xLabel, yLabel, dashedData = []):
-        self.axes.cla()
-        self.fig.clf()
-        self.axes = self.fig.add_subplot(111)
+        self.plotWidget = FigureWidget()
 
-        for i in range(len(arraysToPlot)):
-            arrayToPlot = arraysToPlot[i]
-            if i in dashedData:
-                self.axes.plot(arrayToPlot[:,0], arrayToPlot[:,1], "--", label=labels[i])
-            else:
-                self.axes.plot(arrayToPlot[:,0], arrayToPlot[:,1], label=labels[i])
-        
-        self.axes.legend(loc="upper right")
-        self.axes.set_title(title)
-        self.axes.set_xlabel(xLabel)
-        self.axes.set_ylabel(yLabel)
+        self.layout1.addWidget(self.detectionTableLabel)
+        self.layout1.addWidget(self.detectionTable)
+        self.layout1.addWidget(self.updateDetListButton)
+        self.layout1.addWidget(self.figureSelectionLabel)
+        self.layout1.addWidget(self.figureSelectionDropDown)
+        self.layout1.addWidget(self.notchEchoesTableLabel)
+        self.layout1.addWidget(self.notchEchoesTable)
+               
+        #self.layout1.addStretch()
 
-        self.axes.grid(True)
+        self.layout2.addWidget(self.plotWidget)
 
-        self.draw()
+        self.columnsLayout.addLayout(self.layout1, 1, 1)
+        self.columnsLayout.addLayout(self.layout2, 1, 2)
+        self.columnsLayout.setColumnStretch(1,3)
+        self.columnsLayout.setColumnStretch(2,7)
 
-    def update_multi_figure(self, labels, arraysToPlot, title, xLabels, yLabels, labelsOff, dashedData = []):
-        self.axes.cla()
-        self.fig.clf()
+    def updateDetectionList(self):
+        if self.simulationHandler.getSimulationPerformed():
+            detections = self.simulationHandler.getSimResults()["DetectionReports"]
+            detectionsHeader = self.simulationHandler.getSimResults()["DetectionReportsHeader"]
 
+            self.detectionTable.setColumnCount(len(detections[0]))
+            self.detectionTable.setRowCount(len(detections)+1)
 
-        for i in range(len(labels)):
-            ax = self.fig.add_subplot(len(arraysToPlot), 1, i+1)
-            if i in dashedData:
-                ax.plot(arraysToPlot[i][:,0], arraysToPlot[i][:,1], "--")
-            else: 
-                ax.plot(arraysToPlot[i][:,0], arraysToPlot[i][:,1])
-            if i == 0: 
-                ax.set_title(title)
-            if not labelsOff:
-                ax.set_xlabel(xLabels[i])
-                ax.set_ylabel(yLabels[i])
-            ax.grid(True)
+            for col in range(len(detectionsHeader)):
+                self.detectionTable.setItem(0, col, QTableWidgetItem(detectionsHeader[col]))
 
-        self.draw()
+            for row in range(1, len(detections)+1):
+                for col in range(len(detections[0])):
+                    self.detectionTable.setItem(row, col, QTableWidgetItem(str(round(detections[row-1][col], 3))))
 
+            header = self.detectionTable.horizontalHeader()       
+            header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+            for col in range(1, len(detections[0])):
+                header.setSectionResizeMode(col, QHeaderView.ResizeMode.Stretch)
 
-    def clear_figure(self):
-        self.axes.cla()
-        self.fig.clf()
+            filteredEchoes = self.simulationHandler.getSimResults()["FilteredEchoes"]
+            filteredEchoesHeader = self.simulationHandler.getSimResults()["FilteredEchoesHeader"]
 
-        self.draw()
+            if (len(filteredEchoes) > 0):
+                self.notchEchoesTable.setColumnCount(len(filteredEchoes[0]))
+                self.notchEchoesTable.setRowCount(len(filteredEchoes)+1)
 
+                for col in range(len(filteredEchoesHeader)):
+                    self.notchEchoesTable.setItem(0, col, QTableWidgetItem(filteredEchoesHeader[col]))
 
+                for row in range(1, len(filteredEchoes)+1):
+                    for col in range(len(filteredEchoes[0])):
+                        self.notchEchoesTable.setItem(row, col, QTableWidgetItem(str(round(filteredEchoes[row-1][col], 3))))
+
+            
+
+    def updateFigure(self):
+        if self.simulationHandler.getSimulationPerformed():
+
+            visualizer = self.simulationHandler.getVisualizer()
+
+            if self.figureSelectionDropDown.currentIndex() == 0:
+                if self.detectionTable.currentRow() > 0:
+                    detNo = self.detectionTable.currentRow()
+                else:
+                    detNo = 1
+                labels, points, lines, title, xLabel, yLabel = visualizer.plotAmbiguousRangeDopplerMatrixOfDetectionQT(self.simulationHandler.getSimResults(), detNo)
+                self.plotWidget.canvas.update_point_figure_2dim(labels, points, lines, title, xLabel, yLabel)
+
+            if self.figureSelectionDropDown.currentIndex() == 1:
+                if self.detectionTable.currentRow() > 0:
+                    detNo = self.detectionTable.currentRow()
+                else:
+                    detNo = 1
+                labels, points, title, xLabel, yLabel, ticks = visualizer.plotRangeUnfoldOfEchoesOfDetectionQT(self.simulationHandler.getSimResults(), detNo)
+                self.plotWidget.canvas.update_point_figure_2dim(labels, points, [], title, xLabel, yLabel, ticks=ticks)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
