@@ -94,9 +94,11 @@ class SimulationHandler():
 
     def startSimulation(self, output : QPlainTextEdit):
         
-        self.scenario = self.scenarioProcessor.processScenario(self.dataStore.getScenarioFile(), self.dataStore.getRadarFile())
+        self.scenario, ownshipExtended = self.scenarioProcessor.processScenario(self.dataStore.getScenarioFile(), self.dataStore.getRadarFile())
         output.insertPlainText("Scenario " + self.dataStore.getScenarioFile() + " processed...\n")
         self.outputAircraftTimesFromScenario(output)
+        if ownshipExtended:
+            output.insertPlainText("NOTE: Ownship data had to be extended to cover Tgt Lifetime!\n")
 
         self.rfEnvironment = RfEnvironment(self.scenario, self.dataStore.getSimSettingsFile(), self.dataStore.getRadarFile())
             

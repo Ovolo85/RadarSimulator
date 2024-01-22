@@ -76,7 +76,24 @@ class ScenarioProcessor:
             if manPositions != None:   
                 for pos in range(1, len(manPositions)):
                     self.ownshipPositions.append(manPositions[pos])
+        
+        # Extend Ownship Positions to the EOL of the last target
+        ownshipExtended = False
+        ownshipEndTime = self.ownshipPositions[-1][0]
+        
+        targetsEndTime = 0
+        for tgt in self.targetPositions:
+            if tgt[-1][0] > targetsEndTime:
+                targetsEndTime = tgt[-1][0]
+
+        if ownshipEndTime - targetsEndTime < 0:
+            deltaTime = targetsEndTime - ownshipEndTime + self.burstLength
+            manPositions = self.processStatic(self.ownshipPositions[-1], {"time":deltaTime})
+            for pos in range(1, len(manPositions)):
+                self.ownshipPositions.append(manPositions[pos])
+            ownshipExtended = True
             
+        
 
         # Prepare the result to be returned
         result = []
@@ -84,7 +101,7 @@ class ScenarioProcessor:
         for tgtNumber in range(len(self.scenario.targetStartData)):
             result.append(self.targetPositions[tgtNumber])
         
-        return result
+        return result, ownshipExtended
 
     def getScenarioFromJSON(self, f):
         with open(f) as json_file:
