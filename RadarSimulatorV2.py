@@ -2,6 +2,7 @@ import sys, os, time
 from sys import platform
 import subprocess
 from functools import partial
+import json
 
 # Qt
 from PyQt5.QtWidgets import QComboBox, QPlainTextEdit, QGridLayout, QLineEdit, QMainWindow, QApplication, QPushButton, QWidget, QTabWidget,QVBoxLayout, QLabel, QTableWidget, QTableWidgetItem, QHeaderView
@@ -154,6 +155,14 @@ class SimulationHandler():
     
     def getSimResults(self):
         return self.simResult
+    
+    def getPRFs(self):
+        radarDataFile = self.dataStore.getRadarFile()
+        with open(radarDataFile) as json_file:
+            data = json.load(json_file)
+
+        return data["PRFs"]
+    
 
 class MyTableWidget(QWidget):
     
@@ -170,6 +179,7 @@ class MyTableWidget(QWidget):
         self.tabs.addTab(PureRadarDataTab(self, simulationHandler), "Pure Radar Data")
         self.tabs.addTab(GeoemtryTab(self, simulationHandler), "Geometry")
         self.tabs.addTab(DetectionTab(self, simulationHandler), "Detections")
+        self.tabs.addTab(DetectionPictureTab(self, simulationHandler), "Detection Picture")
 
         self.tabs.setCurrentIndex(startTab)
         
@@ -367,8 +377,17 @@ class PureRadarDataTab(QWidget):
 
         self.figureSelectionLabel = QLabel("Figure Type")
         self.figureSelectionDropDown = QComboBox()
-        self.figureSelectionDropDown.addItems(["Eclipsing Zones", "Antenna Angles", "Clutter Velocities"])
+        self.figureSelectionDropDown.addItems(["Eclipsing Zones", "Antenna Angles", "Clutter Velocities", "Ambiguous R/D Matrix"])
         self.figureSelectionDropDown.activated.connect(self.updateFigure)
+
+        self.prfSelectionLabel = QLabel("PRF")
+        self.prfSelectionDropDown = QComboBox()
+        prf_names = []
+        prfs = self.simulationHandler.getPRFs()
+        for idx, p in enumerate(prfs):
+            prf_names.append("[" + str(idx) + "] " + str(p) + " Hz")
+        self.prfSelectionDropDown.addItems(prf_names)
+        self.prfSelectionDropDown.activated.connect(self.updateFigure)
 
         self.statusOutput = QPlainTextEdit()
         self.statusOutput.setReadOnly(True)
@@ -381,6 +400,8 @@ class PureRadarDataTab(QWidget):
 
         self.layout1.addWidget(self.figureSelectionLabel)
         self.layout1.addWidget(self.figureSelectionDropDown)
+        self.layout1.addWidget(self.prfSelectionLabel)
+        self.layout1.addWidget(self.prfSelectionDropDown)
         self.layout1.addWidget(self.statusOutput)
 
         self.layout1.addStretch()
@@ -406,7 +427,12 @@ class PureRadarDataTab(QWidget):
                 visualizer = self.simulationHandler.getVisualizer()
                 labels, arraysToPlot, title, xLabel, yLabel = visualizer.plotClutterVelocitiesQT(self.simulationHandler.getSimResults()["ClutterVelocities"])
                 self.plotWidget.canvas.update_figure_1dim(labels, arraysToPlot, title, xLabel, yLabel)
-            
+            if self.figureSelectionDropDown.currentIndex() == 3:
+                visualizer = self.simulationHandler.getVisualizer()
+                rects, title, xLabel, yLabel, maxR, maxD, minR, minD, mur, muv = visualizer.plotRangeEclipsingAndMBCNotchInRDMatrix(self.prfSelectionDropDown.currentIndex())
+                self.plotWidget.canvas.update_figure_rects(rects, title, xLabel, yLabel, maxR, maxD, minR, minD)
+                self.statusOutput.setPlainText("MUR: " + str(mur) + "\nMUV: " + str(muv))
+
         else:
             self.plotWidget.canvas.clear_figure()
             self.statusOutput.setPlainText("Please hit \"Start Simulation\" first")
@@ -575,7 +601,7 @@ class DetectionTab(QWidget):
                 else:
                     detNo = 1
                 labels, points, lines, title, xLabel, yLabel = visualizer.plotAmbiguousRangeDopplerMatrixOfDetectionQT(self.simulationHandler.getSimResults(), detNo)
-                self.plotWidget.canvas.update_point_figure_2dim(labels, points, lines, title, xLabel, yLabel)
+                self.plotWidget.canvas.update_point_figure_2dim(labels, points, [], lines, title, xLabel, yLabel)
 
             if self.figureSelectionDropDown.currentIndex() == 1:
                 if self.detectionTable.currentRow() > 0:
@@ -583,7 +609,50 @@ class DetectionTab(QWidget):
                 else:
                     detNo = 1
                 labels, points, title, xLabel, yLabel, ticks = visualizer.plotRangeUnfoldOfEchoesOfDetectionQT(self.simulationHandler.getSimResults(), detNo)
-                self.plotWidget.canvas.update_point_figure_2dim(labels, points, [], title, xLabel, yLabel, ticks=ticks)
+                self.plotWidget.canvas.update_point_figure_2dim(labels, points, [], [], title, xLabel, yLabel, ticks=ticks)
+
+class DetectionPictureTab(QWidget):
+    def __init__(self, parent, simulationHandler : SimulationHandler):
+        super(QWidget, self).__init__(parent)
+
+        self.simulationHandler = simulationHandler
+
+        self.figureTypeTableLabel = QLabel("Figure Type")
+
+        
+        self.figureSelectionDropDown = QComboBox()
+        self.figureSelectionDropDown.addItems(["Detections vs N/E"])
+        self.figureSelectionDropDown.activated.connect(self.updateFigure)
+
+        self.columnsLayout = QGridLayout(self)
+        self.layout1 = QVBoxLayout()
+        self.layout2 = QVBoxLayout()
+
+        self.plotWidget = FigureWidget()
+
+        self.layout1.addWidget(self.figureTypeTableLabel)
+        self.layout1.addWidget(self.figureSelectionDropDown)
+                       
+        self.layout1.addStretch()
+
+        self.layout2.addWidget(self.plotWidget)
+
+        self.columnsLayout.addLayout(self.layout1, 1, 1)
+        self.columnsLayout.addLayout(self.layout2, 1, 2)
+        self.columnsLayout.setColumnStretch(1,2)
+        self.columnsLayout.setColumnStretch(2,8)
+
+    def updateFigure(self):
+         if self.simulationHandler.getSimulationPerformed():
+
+            visualizer = self.simulationHandler.getVisualizer()
+
+            detections = self.simulationHandler.getSimResults()["DetectionReports"]
+            ownshipNEDatDetection = self.simulationHandler.getSimResults()["OwnshipNEDatDetection"]
+
+            if self.figureSelectionDropDown.currentIndex() == 0: # N/E Plot
+                labels, points, lines, title, xLabel, yLabel= visualizer.plotTargetScenarioTopDownAndDetectionReportsQT(self.simulationHandler.getScenarioData(), detections, ownshipNEDatDetection)
+                self.plotWidget.canvas.update_point_figure_2dim([], points, labels, lines, title, xLabel, yLabel, aspectForced=True)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

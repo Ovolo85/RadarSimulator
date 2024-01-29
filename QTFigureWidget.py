@@ -8,6 +8,7 @@ from PyQt5.QtGui import QIcon
 # MatplotLib
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
+from matplotlib.patches import Rectangle
 
 class FigureWidget(QWidget):
     def __init__(self):
@@ -61,16 +62,18 @@ class FigureCanvas(FigureCanvasQTAgg):
 
         self.draw()
 
-    def update_point_figure_2dim(self, labels, pointsListsToPlot, lineListsToPlot, title, xLabel, yLabel, ticks = []):
+    def update_point_figure_2dim(self, pointlabels, pointsListsToPlot, lineLabels, lineListsToPlot, title, xLabel, yLabel, ticks = [], aspectForced = False):
         # This plots single points, each one in a different color 
         #
         # INPUT
-        # labels: list of labels, each one for one point-set
+        # pointlabels: list of labels, each one for one point-set
         # pointsToPlot: list of lists of lists, each one is a single point of 2 dimensions
         # lineListsToPlot: list of np arrays, each array shall be one line (in a distinct color)
         # title: String
         # xLabel: String
         # yLabel: String
+        # ticks: The Grid, list of [major_xTick, minor_xTick, major_yTick, minor_yTick]
+        # aspectForced: keep the aspect of x and y 1:1, make slim plots square
 
         self.axes.cla()
         self.fig.clf()
@@ -79,17 +82,25 @@ class FigureCanvas(FigureCanvasQTAgg):
         point_symboltable = ["ro", "go", "bo", "co", "mo", "yo", "ko", "rx"]
         line_symboltable = ["r-", "g-", "b-", "c-", "m-", "y-", "k-", "r--"]
         
+        # plot points
         symbol = 0
         for idx, l in enumerate(pointsListsToPlot):
             arrayToPlot = np.array(l)
             #for p in l:
                 #self.axes.plot(p[0], p[1], point_symboltable[symbol], label=labels[idx])
-            self.axes.plot(arrayToPlot[:,0], arrayToPlot[:,1], point_symboltable[symbol], label=labels[idx])
+            if len(pointlabels) == len(pointsListsToPlot):
+                self.axes.plot(arrayToPlot[:,0], arrayToPlot[:,1], point_symboltable[symbol], label=pointlabels[idx])
+            else:
+                self.axes.plot(arrayToPlot[:,0], arrayToPlot[:,1], point_symboltable[symbol])
             symbol = symbol+1
 
+        # plot lines
         symbol = 0
-        for line in lineListsToPlot:
-            self.axes.plot(line[:,0], line[:,1], line_symboltable[symbol])
+        for idx, line in enumerate(lineListsToPlot):
+            if len(lineLabels) == len(lineListsToPlot):
+                self.axes.plot(line[:,0], line[:,1], line_symboltable[symbol], label = lineLabels[idx])
+            else:
+                self.axes.plot(line[:,0], line[:,1], line_symboltable[symbol])
             symbol = symbol+1
 
         if len(ticks) > 0:
@@ -107,8 +118,20 @@ class FigureCanvas(FigureCanvasQTAgg):
         self.axes.set_ylabel(yLabel)
         self.axes.grid(True)
 
-        self.draw()
+        if aspectForced:
+            self.axes.set_aspect(1)
+            xWidth = abs(self.axes.get_xlim()[0] - self.axes.get_xlim()[1])
+            yWidth = abs(self.axes.get_ylim()[0] - self.axes.get_ylim()[1])
+            xyWidthDiff = abs(xWidth-yWidth)
+            if yWidth > 0.75 * xWidth:
+                xAddition = xyWidthDiff/0.75 / 2
+                self.axes.set_xlim([self.axes.get_xlim()[0] - xAddition, self.axes.get_xlim()[1] + xAddition])
+            else: 
+                pass
+        else:
+            self.axes.set_aspect("auto")
 
+        self.draw()
 
     def update_figure_1dim(self, labels, arraysToPlot, title, xLabel, yLabel, dashedData = []):
         self.axes.cla()
@@ -151,8 +174,25 @@ class FigureCanvas(FigureCanvasQTAgg):
 
         self.draw()
 
-    
+    def update_figure_rects(self, rectsToPlot, title, xLabel, yLabel, xMax, yMax, xMin, yMin):
+        self.axes.cla()
+        self.fig.clf()
+        self.axes = self.fig.add_subplot(111)
 
+        self.axes.set_xlim([xMin, xMax])
+        self.axes.set_ylim([yMin, yMax])
+
+        for r in rectsToPlot:
+            self.axes.add_patch(Rectangle(r[0], r[1], r[2], color=r[3]))
+
+        #self.axes.legend(loc="upper right")
+        self.axes.set_title(title)
+        self.axes.set_xlabel(xLabel)
+        self.axes.set_ylabel(yLabel)
+
+        self.axes.grid(True)
+
+        self.draw()
 
     def clear_figure(self):
         self.axes.cla()

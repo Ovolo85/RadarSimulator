@@ -159,6 +159,33 @@ class RadarVisualizer:
         ax.set_title("Detection Reports - North/East")
         ax.grid()
 
+    def plotTargetScenarioTopDownAndDetectionReportsQT(self, scenario, detectionReports, ownshipNEDatDetection):
+        labels = []
+        linesToPlot = []
+
+        for i, target in enumerate(scenario[1:]):
+            labels.append("Target " + str(i+1))
+            tgtData =  np.array(target)
+            tgtNE = tgtData[:, 1:3]
+            tgtNE[:, [0, 1]] = tgtNE[:, [1, 0]]
+            linesToPlot.append(tgtNE)
+
+        detectionsNE = []
+        for i, detection in enumerate(detectionReports):
+            rangeInPlane = np.cos(deg2rad(detection[4])) * detection[1]
+            north = np.cos(deg2rad(detection[3])) * rangeInPlane
+            north = north + ownshipNEDatDetection[i][1]
+            east = np.sin(deg2rad(detection[3])) * rangeInPlane
+            east = east + ownshipNEDatDetection[i][2]
+            detectionsNE.append([east, north])
+        detectionsOutput=[detectionsNE]
+
+        title = "Detection Reports - North/East"
+        xLabel = "East[m]"
+        yLabel = "North[m]"
+
+        return labels, detectionsOutput, linesToPlot, title, xLabel, yLabel
+
     def plotAllTargetRanges(self, scenario):
         plt.figure()
         
@@ -199,33 +226,6 @@ class RadarVisualizer:
         plt.grid(True)
 
         plt.show()
-
-    # def plotSingleTargetRangeQT2(self, scenario, tgtNo):
-    #     fig = Figure(tight_layout=True)
-    #     axes = fig.add_subplot(111)
-
-    #     targetData = scenario[tgtNo]
-    #     targetStartTime = scenario[tgtNo][0][0]
-    #     ownshipRowOffset = round(targetStartTime / self.burstLength)
-
-    #     ranges = []
-
-    #     for idx, position in enumerate(targetData):
-    #         ownshipPosition = scenario[0][idx + ownshipRowOffset]
-    #         ranges.append([position[0], vectorToRange(vectorOwnshipToTarget(ownshipPosition, position))])
-
-    #     rangesToPlot = np.array(ranges)
-
-    #     axes.plot(rangesToPlot[:,0], rangesToPlot[:,1], label = "Target " + str(tgtNo))
-    #     axes.legend(loc="upper right")
-    #     axes.set_title("Target " + str(tgtNo) + " Range")
-    #     axes.set_xlabel("Time[s]")
-    #     axes.set_ylabel("Range[m]")
-
-    #     axes.grid(True)
-
-    #     return fig
-
 
     def plotSingleTargetRangeQT(self, scenario, tgtNo):
         
@@ -312,8 +312,14 @@ class RadarVisualizer:
             sightline = vectorOwnshipToTarget(ownshipPosition, position)
             sightlineSpherical = northEastDown2AzElRange(sightline[0], sightline[1], sightline[2])
 
-            azs.append([position[0], sightlineSpherical[0]])
-            els.append([position[0], sightlineSpherical[1]])
+            relAz = sightlineSpherical[0] - ownshipPosition[4]
+            if abs(relAz) > 180:
+                if relAz < 0:
+                    relAz = relAz + 360
+                else:
+                    relAz = relAz - 360
+            azs.append([position[0], relAz])
+            els.append([position[0], sightlineSpherical[1] - ownshipPosition[6]])
 
         arrayOfArrays.append(np.array(azs))
         arrayOfArrays.append(np.array(els))
@@ -584,8 +590,6 @@ class RadarVisualizer:
         borders = []
         echoRow = 0
 
-        
-
         detReportTime = simResult["DetectionReports"][detNo-1][0]
         
         for idx, echo in enumerate(simResult["Echoes"]):
@@ -692,7 +696,6 @@ class RadarVisualizer:
 
         ax.set_title("Range/Doppler Unfold of Detection " + str(detNo))
         
-
     def plotRangeUnfoldOfEchoesOfDetectionQT(self, simResult, detNo):
         resiAlarms = []
         labels = []
@@ -743,4 +746,38 @@ class RadarVisualizer:
 
         return labels, allAlarmsUnfoldedForResi, title, xLabel, yLabel, ticks
 
-    
+    def plotRangeEclipsingAndMBCNotchInRDMatrix(self, prfIdx):
+        prf = self.prfs[prfIdx]
+        
+        mur = calculateMUR(prf)
+        muv = calculateMUV(prf, self.carrierFrequency[0])
+
+        mbcWidth = self.MBCHalfWidthInBins * 2 * self.dopplerBinSize
+        eclipsingLength = self.pw * c
+
+        rects = []
+
+        rects.append([[0,0], eclipsingLength, muv, "blue"])
+        rects.append([[mur, 0], eclipsingLength, muv, "blue"])
+        rects.append([[0, -mbcWidth/2], mur+eclipsingLength, mbcWidth, "red"])
+        rects.append([[0, muv-mbcWidth/2], mur+eclipsingLength, mbcWidth, "red"])
+
+        title = "Amb. R/D Matrix with Eclipsing and Notch"
+        xLabel = "Range[m]"
+        yLabel = "Range Rate (centered on V_c)[m/s]"
+
+        maxPRF = 0
+        for p in self.prfs:
+            if p > maxPRF:
+                maxPRF = p
+
+        minPrf = maxPRF
+        for p in self.prfs:
+            if p < minPrf:
+                minPrf = p
+
+        maxR = calculateMUR(minPrf) + eclipsingLength
+        maxD = calculateMUV(maxPRF, self.carrierFrequency[0]) + mbcWidth/2
+        minD = -mbcWidth/2
+
+        return rects, title, xLabel, yLabel, maxR, maxD, 0, minD, mur, muv
