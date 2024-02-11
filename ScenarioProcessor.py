@@ -19,6 +19,8 @@ class ScenarioProcessor:
 
         self.ownshipPositions = []
         self.targetPositions = []
+
+        outputNames = ["time", "north", "east", "down", "heading", "velocity", "pitch"]
         
         # Set Start Condition for Ownship
         self.ownshipPositions.append([0.0, self.scenario.ownShipStartData["north"], 
@@ -101,7 +103,7 @@ class ScenarioProcessor:
         for tgtNumber in range(len(self.scenario.targetStartData)):
             result.append(self.targetPositions[tgtNumber])
         
-        return result, ownshipExtended
+        return result, ownshipExtended, outputNames
 
     def getScenarioFromJSON(self, f):
         with open(f) as json_file:
