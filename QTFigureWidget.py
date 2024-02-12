@@ -68,6 +68,7 @@ class FigureCanvas(FigureCanvasQTAgg):
         # INPUT
         # pointlabels: list of labels, each one for one point-set
         # pointsToPlot: list of lists of lists, each one is a single point of 2 dimensions
+        # linelabels
         # lineListsToPlot: list of np arrays, each array shall be one line (in a distinct color)
         # title: String
         # xLabel: String
