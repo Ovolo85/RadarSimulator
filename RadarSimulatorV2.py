@@ -95,12 +95,13 @@ class SimulationHandler():
 
     def startSimulation(self, output : QPlainTextEdit):
         
-        self.scenario, ownshipExtended = self.scenarioProcessor.processScenario(self.dataStore.getScenarioFile(), self.dataStore.getRadarFile())
+        self.scenario, ownshipExtended, tspiDataNames = self.scenarioProcessor.processScenario(self.dataStore.getScenarioFile(), self.dataStore.getRadarFile())
         output.insertPlainText("Scenario " + self.dataStore.getScenarioFile() + " processed...\n")
         self.outputAircraftTimesFromScenario(output)
         if ownshipExtended:
             output.insertPlainText("NOTE: Ownship data had to be extended to cover Tgt Lifetime!\n")
-
+        self.outputStore.writeTSPItoDisk(tspiDataNames, self.scenario)
+        output.insertPlainText("TSPI Data saved to disk...\n")
         self.rfEnvironment = RfEnvironment(self.scenario, self.dataStore.getSimSettingsFile(), self.dataStore.getRadarFile())
             
         self.ownship = Ownship(self.scenario, self.dataStore.getRadarFile())
