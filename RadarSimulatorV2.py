@@ -46,12 +46,14 @@ class DataStore():
         self.radarFile = ""
         self.radarSettingsFile = ""
         self.simSettingsFile = ""
+        self.scenarioProcSettingFile = ""
         self.scenarioFile = ""
 
-    def setSimFiles(self, radar, radarsettings, sim):
+    def setSimFiles(self, radar, radarsettings, sim, scenariosettings):
         self.radarFile = radar
         self.radarSettingsFile = radarsettings
         self.simSettingsFile = sim
+        self.scenarioProcSettingFile = scenariosettings
         self.dataLoaded = True # TODO: Check if loaded files are valid before setting data loaded state
     
     def setScenarioFile(self, scenario):
@@ -68,7 +70,11 @@ class DataStore():
     def readSimSettingsFileAsText(self):
         with open(self.simSettingsFile,'r') as file:
             return file.read()
-        
+    
+    def readScenarioProcSettingFileAsText(self):
+        with open(self.scenarioProcSettingFile,'r') as file:
+            return file.read()
+
     def getRadarFile(self):
         return self.radarFile
     
@@ -80,6 +86,9 @@ class DataStore():
     
     def getScenarioFile(self):
         return self.scenarioFile
+    
+    def getScenarioProcSettingFile(self):
+        return self.scenarioProcSettingFile
         
     def getDataLoaded(self):
         return self.dataLoaded
@@ -95,7 +104,7 @@ class SimulationHandler():
 
     def startSimulation(self, output : QPlainTextEdit):
         
-        self.scenario, ownshipExtended, tspiDataNames = self.scenarioProcessor.processScenario(self.dataStore.getScenarioFile(), self.dataStore.getRadarFile())
+        self.scenario, ownshipExtended, tspiDataNames = self.scenarioProcessor.processScenario(self.dataStore.getScenarioFile(), self.dataStore.getScenarioProcSettingFile())
         output.insertPlainText("Scenario " + self.dataStore.getScenarioFile() + " processed...\n")
         self.outputAircraftTimesFromScenario(output)
         if ownshipExtended:
@@ -213,6 +222,12 @@ class SetupTab(QWidget):
         self.simulationSettingsFileEditBtn = QPushButton("Edit")
         self.simulationSettingsFileEditBtn.clicked.connect(partial(self.editFile, self.simulationSettingsFileName.text()))
 
+        self.scenarioProcSettingFileLabel = QLabel("Scenario Processor Settings File")
+        self.scenarioProcSettingFileName = QLineEdit()
+        self.scenarioProcSettingFileName.setText("scenario_proc_setting.json")
+        self.scenarioProcSettingFileEditBtn = QPushButton("Edit")
+        self.scenarioProcSettingFileEditBtn.clicked.connect(partial(self.editFile, self.scenarioProcSettingFileName.text()))
+
         self.loadConfigButton = QPushButton("Load Configuration")
         self.loadConfigButton.clicked.connect(self.loadConfiguration)
 
@@ -236,6 +251,10 @@ class SetupTab(QWidget):
         self.gridLayout1.addWidget(self.simulationSettingsFileName,6,1)
         self.gridLayout1.addWidget(self.simulationSettingsFileEditBtn, 6, 2)
         
+        self.gridLayout1.addWidget(self.scenarioProcSettingFileLabel,7,1)
+        self.gridLayout1.addWidget(self.scenarioProcSettingFileName,8,1)
+        self.gridLayout1.addWidget(self.scenarioProcSettingFileEditBtn, 8, 2)
+
         self.layout1.addLayout(self.gridLayout1)
         self.layout1.addWidget(self.loadConfigButton)
         self.layout1.addStretch()
@@ -253,8 +272,9 @@ class SetupTab(QWidget):
         radar = self.radarConfigFileName.text()
         radarsettings = self.radarSettingsFileName.text()
         simsettings = self.simulationSettingsFileName.text()
+        scenarioprocsettings = self.scenarioProcSettingFileName.text()
 
-        self.dataStore.setSimFiles(radar, radarsettings, simsettings)
+        self.dataStore.setSimFiles(radar, radarsettings, simsettings, scenarioprocsettings)
 
         self.outputText.setPlainText("")
 
@@ -266,6 +286,9 @@ class SetupTab(QWidget):
 
         self.outputText.insertPlainText("SIM SETTINGS: " + simsettings + "\n")
         self.outputText.insertPlainText(self.dataStore.readSimSettingsFileAsText() + "\n")
+
+        self.outputText.insertPlainText("SCENARIO PROCESSOR SETTINGS: " + scenarioprocsettings + "\n")
+        self.outputText.insertPlainText(self.dataStore.readScenarioProcSettingFileAsText() + "\n")
     
     def editFile(self, file):
         if platform == "win32":
