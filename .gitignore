@@ -2,6 +2,7 @@ Output/
 __pycache__/
 RadarSubSys/__pycache__/
 *.pyc
+*.py[cod]
 __pycache__/Radar.cpython-310.pyc
 __pycache__/Radar.cpython-310.pyc
 __pycache__/Radar.cpython-310.pyc
