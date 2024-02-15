@@ -568,7 +568,10 @@ class DetectionTab(QWidget):
 
             for row in range(1, len(detections)+1):
                 for col in range(len(detections[0])):
-                    self.detectionTable.setItem(row, col, QTableWidgetItem(str(round(detections[row-1][col], 3))))
+                    value = detections[row-1][col]
+                    if value != None:
+                        value = round(value, 3)
+                    self.detectionTable.setItem(row, col, QTableWidgetItem(str(value)))
 
             header = self.detectionTable.horizontalHeader()       
             header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
