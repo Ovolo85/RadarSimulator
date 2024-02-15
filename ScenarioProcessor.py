@@ -1,7 +1,7 @@
 import json, math
 
 from numpy import arccos, array, cos, deg2rad, mod, pi, sin, tan
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 
 from Scenario import Scenario
@@ -10,12 +10,12 @@ class ScenarioProcessor:
 
     def __init__(self) -> None:
         self.scenario = None
-        self.burstLength = None
+        self.simStep = None
         
 
-    def processScenario(self, scenarioFile, radarFile):
+    def processScenario(self, scenarioFile, settings):
         self.getScenarioFromJSON(scenarioFile)
-        self.getRadarDataFromJSON(radarFile)
+        self.getScenerioProcSettingFromJSON(settings)
 
         self.ownshipPositions = []
         self.targetPositions = []
@@ -89,7 +89,7 @@ class ScenarioProcessor:
                 targetsEndTime = tgt[-1][0]
 
         if ownshipEndTime - targetsEndTime < 0:
-            deltaTime = targetsEndTime - ownshipEndTime + self.burstLength
+            deltaTime = targetsEndTime - ownshipEndTime + self.simStep
             manPositions = self.processStatic(self.ownshipPositions[-1], {"time":deltaTime})
             for pos in range(1, len(manPositions)):
                 self.ownshipPositions.append(manPositions[pos])
@@ -110,10 +110,10 @@ class ScenarioProcessor:
             data = json.load(json_file)
         self.scenario = Scenario(data["ownship"], data["targets"], data["ownshipMans"], data["targetMans"])
     
-    def getRadarDataFromJSON(self, f):
+    def getScenerioProcSettingFromJSON(self, f):
         with open(f) as json_file:
             data = json.load(json_file)
-        self.burstLength = data["BurstLength"]
+        self.simStep = data["SimStep"]
 
     def processConstRateClimb(self, startCondition, manoeuvre):
         #TODO: This does not yet change the Pitch
@@ -125,7 +125,7 @@ class ScenarioProcessor:
         downChange = manoeuvre["targetdown"] - startCondition[3]
         rate = manoeuvre["rate"]
         manoeuvreTime = abs(downChange) / rate
-        cycles = int(round(manoeuvreTime / self.burstLength))
+        cycles = int(round(manoeuvreTime / self.simStep))
 
         downstep = downChange / cycles
         distanceDiagonal = startCondition[5] * manoeuvreTime
@@ -140,7 +140,7 @@ class ScenarioProcessor:
             newVel = positions[-1][5]
             newPitch = positions[-1][6]
 
-            positions.append([startTime + self.burstLength*cycle, newNorth, newEast, newDown, newHeading, newVel, newPitch])
+            positions.append([startTime + self.simStep*cycle, newNorth, newEast, newDown, newHeading, newVel, newPitch])
 
         positions.pop(0)
         return positions
@@ -153,14 +153,14 @@ class ScenarioProcessor:
 
         time = int(manoeuvre["time"])
         velChange = int(manoeuvre["targetv"])-startCondition[5]
-        velChangePerSimStep = velChange / time * self.burstLength
+        velChangePerSimStep = velChange / time * self.simStep
         velocity = startCondition[5]
 
-        cycles = int(manoeuvre["time"] / self.burstLength)
+        cycles = int(manoeuvre["time"] / self.simStep)
 
         for cycle in range(cycles):
             velocity = velocity + velChangePerSimStep
-            distance = velocity * self.burstLength
+            distance = velocity * self.simStep
 
             newNorth = positions[-1][1] + (cos(deg2rad(positions[-1][4])) * distance) 
             newEast = positions[-1][2] + (sin(deg2rad(positions[-1][4])) * distance)
@@ -169,7 +169,7 @@ class ScenarioProcessor:
             newVel = velocity
             newPitch = positions[-1][6]
 
-            positions.append([startTime + self.burstLength*cycle, newNorth, newEast, newDown, newHeading, newVel, newPitch])
+            positions.append([startTime + self.simStep*cycle, newNorth, newEast, newDown, newHeading, newVel, newPitch])
 
         positions.pop(0)
         return positions
@@ -199,7 +199,7 @@ class ScenarioProcessor:
         cf = 2*r*pi
         cfPart = abs((manoeuvre["degree"]/360)) * cf
         t = cfPart / startCondition[5]
-        cycles = int(t / self.burstLength)
+        cycles = int(t / self.simStep)
 
         anglePerCycle = abs(manoeuvre["degree"]) / cycles
 
@@ -224,7 +224,7 @@ class ScenarioProcessor:
             newVel = positions[-1][5]
             newPitch = positions[-1][6]
 
-            positions.append([startTime + self.burstLength*cycle, newNorth, newEast, newDown, newHeading, newVel, newPitch])
+            positions.append([startTime + self.simStep*cycle, newNorth, newEast, newDown, newHeading, newVel, newPitch])
 
         positions.pop(0)
         return positions
@@ -235,8 +235,8 @@ class ScenarioProcessor:
 
         positions = []
         positions.append(startCondition)
-        distance = startCondition[5] * self.burstLength
-        cycles = int(manoeuvre["time"] / self.burstLength)
+        distance = startCondition[5] * self.simStep
+        cycles = int(manoeuvre["time"] / self.simStep)
 
         
         for cycle in range(cycles):
@@ -247,7 +247,7 @@ class ScenarioProcessor:
             newVel = positions[-1][5]
             newPitch = positions[-1][6]
 
-            positions.append([startTime + self.burstLength*cycle, newNorth, newEast, newDown, newHeading, newVel, newPitch])
+            positions.append([startTime + self.simStep*cycle, newNorth, newEast, newDown, newHeading, newVel, newPitch])
 
         positions.pop(0)
         return positions
