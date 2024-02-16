@@ -3,8 +3,8 @@ import numpy as np
 
 class ScenarioInterpolator:
     
-    def __init__(self, burstRate):
-        self.burstRate = burstRate
+    def __init__(self, burstLength):
+        self.burstLength = burstLength
 
     def interpolateScenario(self, scenario):
         preScenario = scenario
@@ -12,7 +12,7 @@ class ScenarioInterpolator:
 
         for aircraftTSPI in preScenario:
             maxTime = aircraftTSPI[-1][0]
-            targetTimes = np.arange(0.0, maxTime, self.burstRate)
+            targetTimes = np.arange(0.0, maxTime, self.burstLength)
             aircraftTSPIarray = np.array(aircraftTSPI)
             originalTimes = aircraftTSPIarray.T[0]
             postAircraftTSPI = np.array(targetTimes)
