@@ -331,10 +331,13 @@ class ScenarioTab(QWidget):
         self.scenarioDropDown = QComboBox()
         self.updateScenarioFilesFromFolder()
         self.scenarioDropDown.currentTextChanged.connect(self.selectedScenarioChanged)
+
         self.updateFolderButton = QPushButton("Update Folder Content")
         self.updateFolderButton.clicked.connect(self.updateScenarioFilesFromFolder)
+
         self.editScenarioButton = QPushButton("Edit Scenario")
         self.editScenarioButton.clicked.connect(self.editScenario)
+
         self.startProcessingButton = QPushButton("Start Simulation")
         self.startProcessingButton.clicked.connect(self.startSimulation)
         self.statusOutput = QPlainTextEdit()
@@ -369,6 +372,9 @@ class ScenarioTab(QWidget):
 
     def updateScenarioFilesFromFolder(self):
         scenariolist =  os.listdir("Scenarios")
+        for entry in scenariolist:
+            if not entry.endswith(".json"):
+                scenariolist.remove(entry)
         self.scenarioDropDown.clear()
         for s in scenariolist:
             self.scenarioDropDown.addItem(s)
