@@ -114,6 +114,7 @@ class ScenarioProcessor:
         with open(f) as json_file:
             data = json.load(json_file)
         self.simStep = data["SimStep"]
+        self.roundTimeDigits = data["RoundTimeDigits"]
 
     def processConstRateClimb(self, startCondition, manoeuvre):
         #TODO: This does not yet change the Pitch
@@ -140,7 +141,7 @@ class ScenarioProcessor:
             newVel = positions[-1][5]
             newPitch = positions[-1][6]
 
-            positions.append([startTime + self.simStep*cycle, newNorth, newEast, newDown, newHeading, newVel, newPitch])
+            positions.append([round(startTime + self.simStep*cycle, self.roundTimeDigits), newNorth, newEast, newDown, newHeading, newVel, newPitch])
 
         positions.pop(0)
         return positions
@@ -169,7 +170,7 @@ class ScenarioProcessor:
             newVel = velocity
             newPitch = positions[-1][6]
 
-            positions.append([startTime + self.simStep*cycle, newNorth, newEast, newDown, newHeading, newVel, newPitch])
+            positions.append([round(startTime + self.simStep*cycle, self.roundTimeDigits), newNorth, newEast, newDown, newHeading, newVel, newPitch])
 
         positions.pop(0)
         return positions
@@ -224,7 +225,7 @@ class ScenarioProcessor:
             newVel = positions[-1][5]
             newPitch = positions[-1][6]
 
-            positions.append([startTime + self.simStep*cycle, newNorth, newEast, newDown, newHeading, newVel, newPitch])
+            positions.append([round(startTime + self.simStep*cycle, self.roundTimeDigits), newNorth, newEast, newDown, newHeading, newVel, newPitch])
 
         positions.pop(0)
         return positions
@@ -247,7 +248,7 @@ class ScenarioProcessor:
             newVel = positions[-1][5]
             newPitch = positions[-1][6]
 
-            positions.append([startTime + self.simStep*cycle, newNorth, newEast, newDown, newHeading, newVel, newPitch])
+            positions.append([round(startTime + self.simStep*cycle, self.roundTimeDigits), newNorth, newEast, newDown, newHeading, newVel, newPitch])
 
         positions.pop(0)
         return positions
