@@ -2,20 +2,18 @@ import sys, os, time
 from sys import platform
 import subprocess
 from functools import partial
-import json
+
 
 # Qt
 from PyQt5.QtWidgets import QComboBox, QPlainTextEdit, QGridLayout, QLineEdit, QMainWindow, QApplication, QPushButton, QWidget, QTabWidget,QVBoxLayout, QLabel, QTableWidget, QTableWidgetItem, QHeaderView
-from ScenarioInterpolator import ScenarioInterpolator
+from PyQt5.QtWidgets import QRadioButton
+
 
 # Own Modules
-from ScenarioProcessor import ScenarioProcessor
-from Ownship import Ownship
-from RadarVisualizer import RadarVisualizer
-from RfEnvironment import RfEnvironment
-from Radar import Radar
 from OutputStore import OutputStore
 from QTFigureWidget import FigureWidget
+from SimulationHandler import SimulationHandler
+from DataStore import DataStore
 
 
 class App(QMainWindow):
@@ -40,158 +38,6 @@ class App(QMainWindow):
         
         self.show()
 
-class DataStore():
-    def __init__(self):
-        self.dataLoaded = False
-
-        self.radarFile = ""
-        self.radarSettingsFile = ""
-        self.simSettingsFile = ""
-        self.scenarioProcSettingFile = ""
-        self.scenarioFile = ""
-
-    def setSimFiles(self, radar, radarsettings, sim, scenariosettings):
-        self.radarFile = radar
-        self.radarSettingsFile = radarsettings
-        self.simSettingsFile = sim
-        self.scenarioProcSettingFile = scenariosettings
-        self.dataLoaded = True # TODO: Check if loaded files are valid before setting data loaded state
-    
-    def setScenarioFile(self, scenario):
-        self.scenarioFile = scenario
-
-    def readRadarFileAsText(self):
-        with open(self.radarFile,'r') as file:
-            return file.read()
-    
-    def readRadarSettingsFileAsText(self):
-        with open(self.radarSettingsFile,'r') as file:
-            return file.read()
-        
-    def readSimSettingsFileAsText(self):
-        with open(self.simSettingsFile,'r') as file:
-            return file.read()
-    
-    def readScenarioProcSettingFileAsText(self):
-        with open(self.scenarioProcSettingFile,'r') as file:
-            return file.read()
-
-    def getRadarFile(self):
-        return self.radarFile
-    
-    def getRadarSettingsFile(self):
-        return self.radarSettingsFile
-    
-    def getSimSettingsFile(self):
-        return self.simSettingsFile
-    
-    def getScenarioFile(self):
-        return self.scenarioFile
-    
-    def getScenarioProcSettingFile(self):
-        return self.scenarioProcSettingFile
-        
-    def getDataLoaded(self):
-        return self.dataLoaded
-
-class SimulationHandler():
-    def __init__(self, dataStore : DataStore, outputStore : OutputStore) -> None:
-        self.dataStore = dataStore
-        self.outputStore = outputStore
-        
-        self.scenarioProcessor = ScenarioProcessor()
-
-        self.simulationPerformed = False
-
-    def startSimulation(self, output : QPlainTextEdit):
-        
-        # PROCESS the scenario
-        #-----vvv-----
-        self.scenario, ownshipExtended, tspiDataNames = self.scenarioProcessor.processScenario(self.dataStore.getScenarioFile(), self.dataStore.getScenarioProcSettingFile())
-        #-----^^^-----
-        output.insertPlainText("Scenario " + self.dataStore.getScenarioFile() + " processed...\n")
-        self.outputAircraftTimesFromScenario(output)
-        if ownshipExtended:
-            output.insertPlainText("NOTE: Ownship data had to be extended to cover Tgt Lifetime!\n")
-        
-        # Save TSPI data in SimSteps
-        self.outputStore.writeTSPItoDisk(tspiDataNames, self.scenario)
-        output.insertPlainText("TSPI Data saved to disk...\n")
-
-        # INTERPOLATION from SimStep to Radar Burst Length
-        scenarioInterpolator = ScenarioInterpolator(self.getBurstLength())
-        #-----vvv-----
-        self.scenario = scenarioInterpolator.interpolateScenario(self.scenario)
-        #-----^^^-----
-        output.insertPlainText("TSPI interpolated to Radar Burst Length...\n")
-
-        # Initialize Stuff
-        self.rfEnvironment = RfEnvironment(self.scenario, self.dataStore.getSimSettingsFile(), self.dataStore.getRadarFile())
-        self.ownship = Ownship(self.scenario, self.dataStore.getRadarFile())
-        self.radar = Radar(self.dataStore.getRadarFile(), self.dataStore.getRadarSettingsFile(), self.rfEnvironment, self.ownship)
-        self.visualizer = RadarVisualizer(self.dataStore.getRadarFile(), self.dataStore.getSimSettingsFile())
-        output.insertPlainText("RF Environment, Ownship, Radar and Visualizer generated...\n")
-
-        # SIMULATE the Radar
-        output.insertPlainText("Simulation Started...\n")
-        maxOwnshipTime = self.scenario[0][-1][0]
-        output.insertPlainText("Simulating " + str(maxOwnshipTime) + "s...\n")
-        startTime = time.time()
-        #-----vvv-----
-        self.simResult = self.radar.operate(maxOwnshipTime)
-        #-----^^^-----
-        endTime = time.time()
-        duration = endTime - startTime
-        self.outputSimulationStatusText(duration, output)
-        self.outputStore.writeSimResultToDisk(self.simResult)
-
-        self.simulationPerformed = True
-
-    def outputAircraftTimesFromScenario(self, output : QPlainTextEdit):
-        osStart = self.scenario[0][0][0]
-        osEnd = self.scenario[0][-1][0]
-        output.insertPlainText("Ownship data Times: " + str([osStart, osEnd]) + "\n")
-        
-        targetNo = 1
-        for target in range (1, len(self.scenario)):
-            output.insertPlainText("Target " + str(targetNo) + " Times: " + str([self.scenario[target][0][0], self.scenario[target][-1][0]]) + "\n")
-            targetNo += 1
-
-    def outputSimulationStatusText(self, simtime, output : QPlainTextEdit):
-        output.insertPlainText( "Simulation duration: " + str(simtime) + " s\n")
-        output.insertPlainText("Scan Bars with Detections: " + str(self.simResult["BarsWithDetections"]) + "\n")
-        output.insertPlainText("Detections: 1.." + str(len(self.simResult["DetectionReports"])) + "\n")
-        # TODO: log number of bursts required per detection
-
-    def getScenarioData(self):
-        return self.scenario
-    
-    def getNumberOfTargets(self):
-        return len(self.scenario)-1
-    
-    def getVisualizer(self):
-        return self.visualizer
-    
-    def getSimulationPerformed(self):
-        return self.simulationPerformed
-    
-    def getSimResults(self):
-        return self.simResult
-    
-    def getPRFs(self):
-        radarDataFile = self.dataStore.getRadarFile()
-        with open(radarDataFile) as json_file:
-            data = json.load(json_file)
-
-        return data["PRFs"]
-    
-    def getBurstLength(self):
-        radarDataFile = self.dataStore.getRadarFile()
-        with open(radarDataFile) as json_file:
-            data = json.load(json_file)
-
-        return data["BurstLength"]
-    
 
 class MyTableWidget(QWidget):
     
@@ -327,7 +173,7 @@ class ScenarioTab(QWidget):
         self.dataStore = datastore
         self.simulationHandler = simulationHandler
         
-        self.scenarioFileLabel = QLabel("Scenario File")
+        self.scenarioFileLabel = QLabel("Scenario File (*.json)")
         self.scenarioDropDown = QComboBox()
         self.updateScenarioFilesFromFolder()
         self.scenarioDropDown.currentTextChanged.connect(self.selectedScenarioChanged)
@@ -342,6 +188,15 @@ class ScenarioTab(QWidget):
         self.startProcessingButton.clicked.connect(self.startSimulation)
         self.statusOutput = QPlainTextEdit()
         self.statusOutput.setReadOnly(True)
+
+        self.csvFolderLabel = QLabel("TSPI Folder (*.csv)")
+        self.csvFolderName = QLineEdit()
+        self.csvFolderName.setText("/Input")
+
+        self.jsonRadio = QRadioButton("Simulate from JSON Scenario")
+        self.jsonRadio.setChecked(True)
+        self.csvRadio = QRadioButton("Simulate from CSV TSPI")
+
         self.figureSelectionLabel = QLabel("Figure Type")
         self.figureSelectionDropDown = QComboBox()
         self.figureSelectionDropDown.addItems(["Target Scenario N/E", "Complete Scenario N/E", "Target D over Time"])
@@ -357,6 +212,12 @@ class ScenarioTab(QWidget):
         self.layout1.addWidget(self.scenarioDropDown)
         self.layout1.addWidget(self.updateFolderButton)
         self.layout1.addWidget(self.editScenarioButton)
+        self.layout1.addWidget(self.csvFolderLabel)
+        self.layout1.addWidget(self.csvFolderName)
+
+        self.layout1.addWidget(self.jsonRadio)
+        self.layout1.addWidget(self.csvRadio)
+
         self.layout1.addWidget(self.startProcessingButton)
         self.layout1.addWidget(self.statusOutput)
         self.layout1.addWidget(self.figureSelectionLabel)
@@ -404,12 +265,15 @@ class ScenarioTab(QWidget):
         if self.dataStore.getDataLoaded() == False:
             self.statusOutput.insertPlainText("ERROR: Please load the Config Files in the Setup Tab first!")
         else: 
-            self.dataStore.setScenarioFile("Scenarios/" + self.scenarioDropDown.currentText())
-            self.simulationHandler.startSimulation(self.statusOutput)
-            
-            self.simulationDone = True
+            if self.jsonRadio.isChecked():
+                self.dataStore.setScenarioFile("Scenarios/" + self.scenarioDropDown.currentText())
+                self.simulationHandler.startSimulation(self.statusOutput)
+                
+                self.simulationDone = True
 
-            self.updateFigure()
+                self.updateFigure()
+            elif self.csvRadio.isChecked():
+                print("simulate from tspi")
 
     def editScenario(self):
         file = "Scenarios/" + self.scenarioDropDown.currentText()
