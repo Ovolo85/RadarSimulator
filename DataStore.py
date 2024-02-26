@@ -8,6 +8,8 @@ class DataStore():
         self.scenarioProcSettingFile = ""
         self.scenarioFile = ""
 
+        self.tspiInputPath = ""
+
     def setSimFiles(self, radar, radarsettings, sim, scenariosettings):
         self.radarFile = radar
         self.radarSettingsFile = radarsettings
@@ -17,6 +19,10 @@ class DataStore():
     
     def setScenarioFile(self, scenario):
         self.scenarioFile = scenario
+
+    def setTSPIinputPath(self, path):
+        self.tspiInputPath = path
+        pass
 
     def readRadarFileAsText(self):
         with open(self.radarFile,'r') as file:
@@ -51,4 +57,7 @@ class DataStore():
         
     def getDataLoaded(self):
         return self.dataLoaded
+    
+    def getTSPIinputPath(self):
+        return self.tspiInputPath
 

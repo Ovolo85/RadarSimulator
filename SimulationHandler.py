@@ -1,6 +1,7 @@
 import json
 import time
 
+
 from OutputStore import OutputStore
 from Ownship import Ownship
 from Radar import Radar
@@ -9,13 +10,16 @@ from RadarVisualizer import RadarVisualizer
 from RfEnvironment import RfEnvironment
 from ScenarioInterpolator import ScenarioInterpolator
 from ScenarioProcessor import ScenarioProcessor
+from InputHandler import InputHandler
+
 from PyQt5.QtWidgets import QPlainTextEdit
 
 
 class SimulationHandler():
-    def __init__(self, dataStore : DataStore, outputStore : OutputStore) -> None:
+    def __init__(self, dataStore : DataStore) -> None:
         self.dataStore = dataStore
-        self.outputStore = outputStore
+        self.outputStore = OutputStore()
+        self.inputHandler = InputHandler(self.dataStore)
         
         self.scenarioProcessor = ScenarioProcessor()
 
@@ -24,17 +28,23 @@ class SimulationHandler():
     def startSimulation(self, output : QPlainTextEdit, simFromJSON = True):
         
         # PROCESS the scenario
-        #-----vvv-----
-        self.scenario, ownshipExtended, tspiDataNames = self.scenarioProcessor.processScenario(self.dataStore.getScenarioFile(), self.dataStore.getScenarioProcSettingFile())
-        #-----^^^-----
-        output.insertPlainText("Scenario " + self.dataStore.getScenarioFile() + " processed...\n")
-        self.outputAircraftTimesFromScenario(output)
-        if ownshipExtended:
-            output.insertPlainText("NOTE: Ownship data had to be extended to cover Tgt Lifetime!\n")
-        
-        # Save TSPI data in SimSteps
-        self.outputStore.writeTSPItoDisk(tspiDataNames, self.scenario)
-        output.insertPlainText("TSPI Data saved to disk...\n")
+        if simFromJSON:
+            #-----vvv-----
+            self.scenario, ownshipExtended, tspiDataNames = self.scenarioProcessor.processScenario(self.dataStore.getScenarioFile(), self.dataStore.getScenarioProcSettingFile())
+            #-----^^^-----
+            output.insertPlainText("Scenario " + self.dataStore.getScenarioFile() + " processed...\n")
+            self.outputAircraftTimesFromScenario(output)
+            if ownshipExtended:
+                output.insertPlainText("NOTE: Ownship data had to be extended to cover Tgt Lifetime!\n")
+            
+            # Save TSPI data in SimSteps
+            self.outputStore.writeTSPItoDisk(tspiDataNames, self.scenario)
+            output.insertPlainText("TSPI Data saved to disk...\n")
+
+        else:
+            #-----vvv-----
+            self.scenario = self.inputHandler.readTSPIfromDisk()
+            #-----^^^-----
 
         # INTERPOLATION from SimStep to Radar Burst Length
         scenarioInterpolator = ScenarioInterpolator(self.getBurstLength())

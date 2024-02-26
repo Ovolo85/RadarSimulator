@@ -3,5 +3,7 @@
     "RangeEclipsing":true,
     "LimitedResolution":true,
     "MaxRange":200000, 
-    "BeamOverlap":0.1
+    "BeamOverlap":0.1,
+    "tspiDataSequence":["time", "north", "east", "down", "heading", "velocity", "pitch"] 
+
 }

@@ -1,4 +1,6 @@
 Output/
+Input/
+Input2/
 __pycache__/
 RadarSubSys/__pycache__/
 *.pyc

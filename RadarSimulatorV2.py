@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QRadioButton
 
 
 # Own Modules
-from OutputStore import OutputStore
+
 from QTFigureWidget import FigureWidget
 from SimulationHandler import SimulationHandler
 from DataStore import DataStore
@@ -21,8 +21,8 @@ class App(QMainWindow):
     def __init__(self):
         super().__init__()
         self.dataStore = DataStore()
-        self.outputStore = OutputStore()
-        self.simulationHandler = SimulationHandler(self.dataStore, self.outputStore)
+        
+        self.simulationHandler = SimulationHandler(self.dataStore)
 
         #--------
         self.title = 'Radar Simulator v2'
@@ -58,7 +58,6 @@ class MyTableWidget(QWidget):
 
         self.tabs.setCurrentIndex(startTab)
         
-                
         # Add tabs to widget
         self.layout.addWidget(self.tabs)
         self.setLayout(self.layout)
@@ -190,8 +189,8 @@ class ScenarioTab(QWidget):
         self.statusOutput.setReadOnly(True)
 
         self.csvFolderLabel = QLabel("TSPI Folder (*.csv)")
-        self.csvFolderName = QLineEdit()
-        self.csvFolderName.setText("/Input")
+        self.csvFolderName = QLineEdit() # TODO: implement a Folder Picker
+        self.csvFolderName.setText("Input/")
 
         self.jsonRadio = QRadioButton("Simulate from JSON Scenario")
         self.jsonRadio.setChecked(True)
@@ -267,13 +266,15 @@ class ScenarioTab(QWidget):
         else: 
             if self.jsonRadio.isChecked():
                 self.dataStore.setScenarioFile("Scenarios/" + self.scenarioDropDown.currentText())
-                self.simulationHandler.startSimulation(self.statusOutput)
+                self.simulationHandler.startSimulation(self.statusOutput, simFromJSON=True)
                 
-                self.simulationDone = True
-
-                self.updateFigure()
+                
             elif self.csvRadio.isChecked():
-                print("simulate from tspi")
+                self.dataStore.setTSPIinputPath(self.csvFolderName.text()) # TODO: check validity of the Path
+                self.simulationHandler.startSimulation(self.statusOutput, simFromJSON=False)
+
+            self.simulationDone = True
+            self.updateFigure()
 
     def editScenario(self):
         file = "Scenarios/" + self.scenarioDropDown.currentText()
