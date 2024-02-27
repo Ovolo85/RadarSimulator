@@ -19,7 +19,7 @@ class OutputStore:
         dataKeys = keyList[1::2]
         
         for idx, dataKey in enumerate(dataKeys):
-            with open(self.outputPath + dataKey + ".csv", "w") as f:
+            with open(self.outputPath + dataKey + ".csv", "w", newline="") as f:
                 writer = csv.writer(f, quoting=csv.QUOTE_NONNUMERIC)
                 writer.writerow(simResult[headerKeys[idx]])
                 for row in simResult[dataKey]:
@@ -39,7 +39,7 @@ class OutputStore:
                 print('Failed to delete %s. Reason: %s' % (file_path, e))
 
         # Write Ownship TSPI in /Output/TSPI/OS.csv
-        with open(self.tspiPath + "OS.csv", "w") as f:
+        with open(self.tspiPath + "OS.csv", "w", newline="") as f:
             writer = csv.writer(f, quoting=csv.QUOTE_NONNUMERIC)
             writer.writerow(dataNames)
             for row in TSPIs[0]:
@@ -47,7 +47,7 @@ class OutputStore:
 
         # Write Target TSPIs in /Output/TSPI/Tx.csv
         for t in range(1, len(TSPIs)):
-            with open(self.tspiPath + "T" + str(t) + ".csv", "w") as f:
+            with open(self.tspiPath + "T" + str(t) + ".csv", "w", newline="") as f:
                 writer = csv.writer(f, quoting=csv.QUOTE_NONNUMERIC)
                 writer.writerow(dataNames)
                 for row in TSPIs[t]:
