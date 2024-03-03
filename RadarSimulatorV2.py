@@ -198,7 +198,7 @@ class ScenarioTab(QWidget):
 
         self.figureSelectionLabel = QLabel("Figure Type")
         self.figureSelectionDropDown = QComboBox()
-        self.figureSelectionDropDown.addItems(["Target Scenario N/E", "Complete Scenario N/E", "Target D over Time"])
+        self.figureSelectionDropDown.addItems(["Target Scenario N/E", "Complete Scenario N/E", "Target D over Time", "Complete Scenario 3D"])
         self.figureSelectionDropDown.activated.connect(self.updateFigure)
 
         self.plotWidget = FigureWidget()
@@ -255,6 +255,9 @@ class ScenarioTab(QWidget):
             if self.figureSelectionDropDown.currentIndex() == 2:
                 labels, arraysToPlot, title, xLabel, yLabel = visualizer.plotTargetDownVsTimeQT(self.simulationHandler.getScenarioData())
                 self.plotWidget.canvas.update_figure_1dim(labels, arraysToPlot, title, xLabel, yLabel)
+            if self.figureSelectionDropDown.currentIndex() == 3:
+                labels, arraysToPlot, title, xLabel, yLabel, zLabel = visualizer.plotCompleteScenario3dQT(self.simulationHandler.getScenarioData())
+                self.plotWidget.canvas.update_figure_3dim(labels, arraysToPlot, title, xLabel, yLabel, zLabel, True)
         else:
             self.plotWidget.canvas.clear_figure()
             self.statusOutput.setPlainText("Please hit \"Start Simulation\" first")

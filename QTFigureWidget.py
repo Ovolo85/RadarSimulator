@@ -62,6 +62,47 @@ class FigureCanvas(FigureCanvasQTAgg):
 
         self.draw()
 
+    def update_figure_3dim(self, labels, arraysToPlot, title, xLabel, yLabel, zLabel, aspectForced):
+        
+        self.axes.cla()
+        self.fig.clf()
+        self.axes = self.fig.add_subplot(111, projection='3d')
+
+        maxNorths = []
+        maxEasts = []
+        minNorths = []
+        minEasts = []
+
+        for i in range(len(arraysToPlot)):
+            arrayToPlot = arraysToPlot[i]
+
+            currentArray = np.array(arrayToPlot)
+            xmax = np.amax(currentArray, axis=0)
+            xmin = np.amin(currentArray, axis=0)
+            maxNorths.append(xmax[1])
+            maxEasts.append(xmax[2])
+            minNorths.append(xmin[1])
+            minEasts.append(xmin[2])
+
+            self.axes.plot(arrayToPlot[:,2], arrayToPlot[:,1], arrayToPlot[:,3], label=labels[i])
+
+        self.axes.legend(loc="upper right")
+        self.axes.set_title(title)
+        self.axes.set_xlabel(xLabel)
+        self.axes.set_ylabel(yLabel)
+        self.axes.set_zlabel(zLabel)
+
+        maxCoordinates = maxEasts + maxNorths
+        minCoordinartes = minEasts + minNorths
+
+        self.axes.set_xlim([min(minCoordinartes), max(maxCoordinates)])
+        self.axes.set_ylim([min(minCoordinartes), max(maxCoordinates)])
+
+        self.axes.grid(True)
+
+        self.draw()
+
+
     def update_point_figure_2dim(self, pointlabels, pointsListsToPlot, lineLabels, lineListsToPlot, title, xLabel, yLabel, ticks = [], aspectForced = False):
         # This plots single points, each one in a different color 
         #

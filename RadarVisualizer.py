@@ -77,6 +77,26 @@ class RadarVisualizer:
         yLabel = "North[m]"
         return labels, arrayToPlot, title, xLabel, yLabel
     
+    def plotCompleteScenario3dQT(self, scenario):
+        labels = []
+        arrayToPlot = []
+
+        maxNorth=[]
+        maxEast=[]
+
+        for i in range(len(scenario)):
+            currentArray = np.array(scenario[i])
+            
+            arrayToPlot.append(np.delete(currentArray, slice(4, 7), 1))
+            labels.append("Target" + str(i))
+        labels[0] = "Ownship"
+        title = "Scenario 3D"
+        xLabel = "East[m]"
+        yLabel = "North[m]"
+        zLabel = "Down[m]"
+        return labels, arrayToPlot, title, xLabel, yLabel, zLabel
+
+    
     def plotTargetScenarioTopDown(self, scenario):
         
         plt.figure()
