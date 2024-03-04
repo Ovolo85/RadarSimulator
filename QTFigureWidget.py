@@ -93,10 +93,16 @@ class FigureCanvas(FigureCanvasQTAgg):
         self.axes.set_zlabel(zLabel)
 
         maxCoordinates = maxEasts + maxNorths
-        minCoordinartes = minEasts + minNorths
+        minCoordinates = minEasts + minNorths
 
-        self.axes.set_xlim([min(minCoordinartes), max(maxCoordinates)])
-        self.axes.set_ylim([min(minCoordinartes), max(maxCoordinates)])
+        middleEast = min(minEasts) + (max(maxEasts) - min (minEasts))/2
+        middleNorth = min(minNorths) + (max(maxNorths) - min(minNorths))/2
+
+        halfWidth = (max(maxCoordinates) - min(minCoordinates)) / 2
+
+        self.axes.set_xlim([middleEast - halfWidth, middleEast + halfWidth])
+        self.axes.set_ylim([middleNorth - halfWidth, middleNorth + halfWidth])
+        self.axes.set_zlim([-halfWidth, halfWidth])
 
         self.axes.grid(True)
 
