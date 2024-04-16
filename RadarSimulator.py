@@ -159,7 +159,7 @@ class RadarSimulator:
         scenarioFile = "Scenarios/" + self.entScenarioFile.get()
         radarFile = self.entRadarFile.get()
         
-        self.scenario = self.scenarioProcessor.processScenario(scenarioFile, radarFile)
+        self.scenario = self.scenarioProcessor.processJsonScenario(scenarioFile, radarFile)
 
         self.rfEnvironment = RfEnvironment(self.scenario, self.entSimulationFile.get(), self.entRadarFile.get())
         self.ownship = Ownship(self.scenario, self.entRadarFile.get())

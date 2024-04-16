@@ -30,7 +30,7 @@ class SimulationHandler():
         # PROCESS the scenario
         if simFromJSON:
             #-----vvv-----
-            self.scenario, ownshipExtended, tspiDataNames = self.scenarioProcessor.processScenario(self.dataStore.getScenarioFile(), self.dataStore.getScenarioProcSettingFile())
+            self.scenario, ownshipExtended, tspiDataNames = self.scenarioProcessor.processJsonScenario(self.dataStore.getScenarioFile(), self.dataStore.getScenarioProcSettingFile())
             #-----^^^-----
             output.insertPlainText("Scenario " + self.dataStore.getScenarioFile() + " processed...\n")
             self.outputAircraftTimesFromScenario(output)

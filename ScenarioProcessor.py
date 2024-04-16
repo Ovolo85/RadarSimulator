@@ -12,9 +12,7 @@ class ScenarioProcessor:
         self.scenario = None
         self.simStep = None
         
-
-    def processScenario(self, scenarioFile, settings):
-        self.getScenarioFromJSON(scenarioFile)
+    def processScenarioInternally(self, settings):
         self.getScenerioProcSettingFromJSON(settings)
 
         self.ownshipPositions = []
@@ -105,6 +103,14 @@ class ScenarioProcessor:
         
         return result, ownshipExtended, outputNames
 
+    def processJsonScenario(self, scenarioFile, settings):
+        self.getScenarioFromJSON(scenarioFile)
+        return self.processScenarioInternally(settings)
+    
+    def processGivenScenario(self, scenario, settings):
+        self.scenario = scenario
+        return self.processScenarioInternally(settings)
+        
     def getScenarioFromJSON(self, f):
         with open(f) as json_file:
             data = json.load(json_file)
@@ -179,7 +185,7 @@ class ScenarioProcessor:
 
 
     def processGCurve (self, startCondition, manoeuvre):
-        
+        # TODO: crashes for 1g... 
         startTime = startCondition[0]
 
         # Get Radius
