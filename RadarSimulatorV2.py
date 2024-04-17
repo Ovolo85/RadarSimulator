@@ -232,12 +232,11 @@ class ScenarioTab(QWidget):
 
     def updateScenarioFilesFromFolder(self):
         scenariolist =  os.listdir("Scenarios")
-        for entry in scenariolist:
-            if not entry.endswith(".json"):
-                scenariolist.remove(entry)
+        
         self.scenarioDropDown.clear()
         for s in scenariolist:
-            self.scenarioDropDown.addItem(s)
+            if s.endswith(".json"):
+                self.scenarioDropDown.addItem(s)
 
     def selectedScenarioChanged(self):
         self.simulationDone = False
