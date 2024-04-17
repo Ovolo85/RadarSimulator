@@ -3,14 +3,11 @@ from sys import platform
 import subprocess
 from functools import partial
 
-
 # Qt
 from PyQt5.QtWidgets import QComboBox, QPlainTextEdit, QGridLayout, QLineEdit, QMainWindow, QApplication, QPushButton, QWidget, QTabWidget,QVBoxLayout, QLabel, QTableWidget, QTableWidgetItem, QHeaderView
 from PyQt5.QtWidgets import QRadioButton
 
-
 # Own Modules
-
 from QTFigureWidget import FigureWidget
 from SimulationHandler import SimulationHandler
 from DataStore import DataStore

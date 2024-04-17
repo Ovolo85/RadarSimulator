@@ -50,6 +50,8 @@ class ScenarioProcessor:
                     manPositions = self.processStatic(self.targetPositions[tgtNumber][-1], man)
                 elif man["type"] == "gcurve":
                     manPositions = self.processGCurve(self.targetPositions[tgtNumber][-1], man)
+                elif man["type"] == "bankcurve":
+                    manPositions = self.processBankCurve(self.targetPositions[tgtNumber][-1], man)
                 elif man["type"] == "constaccel":
                     manPositions = self.processConstAccel(self.targetPositions[tgtNumber][-1], man)
                 elif man["type"] == "constrateclimb":
@@ -67,6 +69,8 @@ class ScenarioProcessor:
                 manPositions = self.processStatic(self.ownshipPositions[-1], man)
             elif man["type"] == "gcurve":
                 manPositions = self.processGCurve(self.ownshipPositions[-1], man)
+            elif man["type"] == "bankcurve":
+                manPositions = self.processBankCurve(self.ownshipPositions[-1], man)
             elif man["type"] == "constaccel":
                 manPositions = self.processConstAccel(self.ownshipPositions[-1], man)
             elif man["type"] == "constrateclimb":
@@ -181,19 +185,30 @@ class ScenarioProcessor:
         positions.pop(0)
         return positions
 
-        
-
-
     def processGCurve (self, startCondition, manoeuvre):
-        # TODO: crashes for 1g... 
-        startTime = startCondition[0]
-
-        # Get Radius
+        
+        # Get Radius, Bank, Degrees
         bank = arccos(1/manoeuvre["gload"])
         r = (startCondition[5] ** 2) / (9.81 * tan(bank))
+        degree = manoeuvre["degree"]
 
+        return self.__processCurveInternal(startCondition, r, degree)
+    
+    def processBankCurve(self, startCondition, manoeuvre):
+
+        # Get Radius, Bank, Degrees
+        bank = manoeuvre["bank"]
+        r = (startCondition[5] ** 2) / (9.81 * tan(bank))
+        degree = manoeuvre["degree"]
+
+        return self.__processCurveInternal(startCondition, r, degree)
+
+    def __processCurveInternal(self, startCondition, r, degree):
+        # TODO: crashes for 1g... 
+        startTime = startCondition[0]
+        
         # Get Center Point
-        if manoeuvre["degree"] < 0:
+        if degree < 0:
             centerDir = startCondition[4] - 90 
         else:
             centerDir = startCondition[4] + 90
@@ -204,11 +219,11 @@ class ScenarioProcessor:
 
         # get Manoeuvre Time
         cf = 2*r*pi
-        cfPart = abs((manoeuvre["degree"]/360)) * cf
+        cfPart = abs((degree/360)) * cf
         t = cfPart / startCondition[5]
         cycles = int(t / self.simStep)
 
-        anglePerCycle = abs(manoeuvre["degree"]) / cycles
+        anglePerCycle = abs(degree) / cycles
 
         # prepare Result
         positions = []
@@ -217,7 +232,7 @@ class ScenarioProcessor:
         for cycle in range(cycles):
             currentAngle = anglePerCycle * (cycle + 1)
             
-            if manoeuvre["degree"] < 0:
+            if degree < 0:
                 currentAngleTotal = centerToStartingPointDir - currentAngle
                 newHeading = positions[-1][4] - anglePerCycle 
             else:
