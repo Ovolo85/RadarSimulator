@@ -31,7 +31,7 @@
                 "type":"static", "time":20
             },
             {
-                "type":"bankcurve", "bank":20, "degree": 90
+                "type":"bankcurve", "bank":30, "degree": 90
             },
             {
                 "type":"static", "time":20

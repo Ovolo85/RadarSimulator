@@ -1,6 +1,6 @@
 import json, math
 
-from numpy import arccos, array, cos, deg2rad, mod, pi, sin, tan
+from numpy import arccos, array, cos, deg2rad, mod, pi, sin, tan, radians
 #import matplotlib.pyplot as plt
 
 
@@ -197,7 +197,7 @@ class ScenarioProcessor:
     def processBankCurve(self, startCondition, manoeuvre):
 
         # Get Radius, Bank, Degrees
-        bank = manoeuvre["bank"]
+        bank = radians(manoeuvre["bank"])
         r = (startCondition[5] ** 2) / (9.81 * tan(bank))
         degree = manoeuvre["degree"]
 
