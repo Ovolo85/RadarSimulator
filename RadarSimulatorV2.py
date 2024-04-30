@@ -3,14 +3,11 @@ from sys import platform
 import subprocess
 from functools import partial
 
-
 # Qt
 from PyQt5.QtWidgets import QComboBox, QPlainTextEdit, QGridLayout, QLineEdit, QMainWindow, QApplication, QPushButton, QWidget, QTabWidget,QVBoxLayout, QLabel, QTableWidget, QTableWidgetItem, QHeaderView
 from PyQt5.QtWidgets import QRadioButton
 
-
 # Own Modules
-
 from QTFigureWidget import FigureWidget
 from SimulationHandler import SimulationHandler
 from DataStore import DataStore
@@ -232,12 +229,11 @@ class ScenarioTab(QWidget):
 
     def updateScenarioFilesFromFolder(self):
         scenariolist =  os.listdir("Scenarios")
-        for entry in scenariolist:
-            if not entry.endswith(".json"):
-                scenariolist.remove(entry)
+        
         self.scenarioDropDown.clear()
         for s in scenariolist:
-            self.scenarioDropDown.addItem(s)
+            if s.endswith(".json"):
+                self.scenarioDropDown.addItem(s)
 
     def selectedScenarioChanged(self):
         self.simulationDone = False
