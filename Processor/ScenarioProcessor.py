@@ -4,7 +4,7 @@ from numpy import arccos, array, cos, deg2rad, mod, pi, sin, tan, radians
 #import matplotlib.pyplot as plt
 
 
-from Scenario import Scenario
+from Processor.Scenario import Scenario
 
 class ScenarioProcessor:
 
@@ -59,7 +59,7 @@ class ScenarioProcessor:
                 else:
                     print("Unknown Manoeuvre Type " + man["type"])
                 if manPositions != None:  
-                    for pos in range(1, len(manPositions)):
+                    for pos in range(len(manPositions)):
                         self.targetPositions[tgtNumber].append(manPositions[pos])
 
                         
@@ -78,7 +78,7 @@ class ScenarioProcessor:
             else:
                 print("Unknown Manoeuvre Type " + man["type"])
             if manPositions != None:   
-                for pos in range(1, len(manPositions)):
+                for pos in range(len(manPositions)):
                     self.ownshipPositions.append(manPositions[pos])
         
         # Extend Ownship Positions to the EOL of the last target
@@ -151,7 +151,7 @@ class ScenarioProcessor:
             newVel = positions[-1][5]
             newPitch = positions[-1][6]
 
-            positions.append([round(startTime + self.simStep*cycle, self.roundTimeDigits), newNorth, newEast, newDown, newHeading, newVel, newPitch])
+            positions.append([round(startTime + self.simStep*(cycle+1), self.roundTimeDigits), newNorth, newEast, newDown, newHeading, newVel, newPitch])
 
         positions.pop(0)
         return positions
@@ -180,7 +180,7 @@ class ScenarioProcessor:
             newVel = velocity
             newPitch = positions[-1][6]
 
-            positions.append([round(startTime + self.simStep*cycle, self.roundTimeDigits), newNorth, newEast, newDown, newHeading, newVel, newPitch])
+            positions.append([round(startTime + self.simStep*(cycle+1), self.roundTimeDigits), newNorth, newEast, newDown, newHeading, newVel, newPitch])
 
         positions.pop(0)
         return positions
@@ -246,7 +246,7 @@ class ScenarioProcessor:
             newVel = positions[-1][5]
             newPitch = positions[-1][6]
 
-            positions.append([round(startTime + self.simStep*cycle, self.roundTimeDigits), newNorth, newEast, newDown, newHeading, newVel, newPitch])
+            positions.append([round(startTime + self.simStep*(cycle+1), self.roundTimeDigits), newNorth, newEast, newDown, newHeading, newVel, newPitch])
 
         positions.pop(0)
         return positions
@@ -269,7 +269,8 @@ class ScenarioProcessor:
             newVel = positions[-1][5]
             newPitch = positions[-1][6]
 
-            positions.append([round(startTime + self.simStep*cycle, self.roundTimeDigits), newNorth, newEast, newDown, newHeading, newVel, newPitch])
+            positions.append([round(startTime + self.simStep*(cycle+1), self.roundTimeDigits), newNorth, newEast, newDown, newHeading, newVel, newPitch])
+            pass
 
         positions.pop(0)
         return positions

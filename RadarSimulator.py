@@ -3,7 +3,7 @@ from OutputStore import OutputStore
 from Ownship import Ownship
 from RadarVisualizer import RadarVisualizer
 from RfEnvironment import RfEnvironment
-from ScenarioProcessor import ScenarioProcessor
+from Processor.ScenarioProcessor import ScenarioProcessor
 from Radar import Radar
 from RadarReplay import RadarReplay
 import tkinter as tk

@@ -9,7 +9,7 @@ from DataStore import DataStore
 from RadarVisualizer import RadarVisualizer
 from RfEnvironment import RfEnvironment
 from ScenarioInterpolator import ScenarioInterpolator
-from ScenarioProcessor import ScenarioProcessor
+from Processor.ScenarioProcessor import ScenarioProcessor
 from InputHandler import InputHandler
 
 from PyQt5.QtWidgets import QPlainTextEdit
